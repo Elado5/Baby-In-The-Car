@@ -1,0 +1,17 @@
+<resources>
+    <string name="app_name">Baby In The Car</string>
+    <string name="activate">Activate</string>
+    <string name="logo">TODO</string>
+    <string name="txt">-</string>
+    <string name="current_status">Current Status:</string>
+
+    <string name="title_activity_permission_rational">PermissionRationalActivity</string>
+    <string name="main_message_activity_permission_rational">Track activity changes by letting us read your phone\'s activity transitions.</string>
+    <string name="details_message_activity_permission_rational">This app\'s experience requires access to your phone\'s activity transitions to display changes from walking to standing still.</string>
+    <string name="no_thanks_activity_permission_rational">No Thanks</string>
+    <string name="continue_activity_permission_rational">Continue</string>
+    <string name="enable_disable_button_activity_recognition">Enable/Disable Activity Recognition</string>
+    <string name="explainHeb">אנא אשרו מעקב אחרי שינוי פעילות על מנת שהאפליקציה תוכל לתפקד כראוי</string>
+    <string name="approveHeb">האפליקציה צריכה גישה למידע של מעבר בין פעילויות על מכשירך על מנת לזהות אם המשתמש נוהג או לא..</string>
+    <string name="actiavtion_stop_btn">actiavtion/stop btn</string>
+</resources>
