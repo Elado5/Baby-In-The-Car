@@ -18,11 +18,15 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.media.MediaPlayer;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.PowerManager;
+import android.preference.PreferenceManager;
+import android.provider.Settings;
 import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
@@ -40,6 +44,7 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 
 public class MainActivity extends AppCompatActivity implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, View.OnClickListener {
+
 
     //Getting api from goggle
     public GoogleApiClient mApiClient;
@@ -59,10 +64,11 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     //alarm
     Boolean alarmSet = false;
 
-    final Intent notificationIntent = new Intent(this, MainActivity.class);
+    //sharedpreferences
+    SharedPreferences prefs;
+    //SharedPreferences pref = context.getSharedPreferences(MY_PREFERENCE_NAME, Context.MODE_MULTI_PROCESS);
 
-
-    //dialog
+    //dialog listener
     DialogInterface.OnClickListener listener = new DialogInterface.OnClickListener() {
         @Override
         public void onClick(DialogInterface dialog, int which) {
@@ -75,6 +81,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                 case Dialog.BUTTON_NEGATIVE:
                     dialogOnScreen = false;
                     mp.pause();
+                    mApiClient.disconnect();
                     removeActivityUpdates();
                     break;
             }
@@ -96,31 +103,79 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        mp = MediaPlayer.create(this, R.raw.ringtone);
-        mp.setLooping(true); //make sure it loops
-        curTime = System.currentTimeMillis();
-        btn = (ImageButton) findViewById(R.id.btn);
-        btn.setImageResource(R.drawable.startbtn);
-        CurrentState = (TextView) findViewById(R.id.CurrentState);
-        alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
 
+        //Shared prefs
+        prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        SharedPreferences.Editor editor = prefs.edit();
+        //if we don't have language settings saved, which is the first instance
+        if(!(prefs.contains("English")) && !(prefs.contains("Hebrew")))
+        {
+            editor.putBoolean("English", true);
+            editor.putBoolean("Hebrew", false);
+            editor.apply();
+        }
 
-        mApiClient = new GoogleApiClient.Builder(this)
-                .addApi(ActivityRecognition.API)
-                .addConnectionCallbacks(MainActivity.this)
-                .addOnConnectionFailedListener(MainActivity.this)
-                .build();
+        if(prefs.getBoolean("English", true))
+        {
+            mp = MediaPlayer.create(this, R.raw.ringtone);
+            mp.setLooping(true); //make sure it loops
+            curTime = System.currentTimeMillis();
+            btn = (ImageButton) findViewById(R.id.btn);
+            btn.setImageResource(R.drawable.startbtn);
+            CurrentState = (TextView) findViewById(R.id.CurrentState);
+            alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
+            if (!Settings.canDrawOverlays(this)) {
+                Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:" + getPackageName()));
+                startActivityForResult(intent, 0);
+            }
 
-        btn.setOnClickListener(this);
+            mApiClient = new GoogleApiClient.Builder(this)
+                    .addApi(ActivityRecognition.API)
+                    .addConnectionCallbacks(MainActivity.this)
+                    .addOnConnectionFailedListener(MainActivity.this)
+                    .build();
 
+            btn.setOnClickListener(this);
+        }
 
+        //change stuff here to hebrew
+        else if (prefs.getBoolean("Hebrew", true))
+        {
+            mp = MediaPlayer.create(this, R.raw.ringtone);
+            mp.setLooping(true); //make sure it loops
+            curTime = System.currentTimeMillis();
+            btn = (ImageButton) findViewById(R.id.btn);
+            btn.setImageResource(R.drawable.startbtn);
+            CurrentState = (TextView) findViewById(R.id.CurrentState);
+            alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
+            if (!Settings.canDrawOverlays(this)) {
+                Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:" + getPackageName()));
+                startActivityForResult(intent, 0);
+            }
 
+            mApiClient = new GoogleApiClient.Builder(this)
+                    .addApi(ActivityRecognition.API)
+                    .addConnectionCallbacks(MainActivity.this)
+                    .addOnConnectionFailedListener(MainActivity.this)
+                    .build();
 
+            btn.setOnClickListener(this);
+        }
     }
 
    // @RequiresApi(api = Build.VERSION_CODES.O) //for the dialog overlay type to work, it needs 26+ android instead of 23+
     private void showDialog(){
 
+        //pop it back on screen
+        Intent openMainActivity = new Intent(MainActivity.this, MainActivity.class);
+        openMainActivity.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+        //openMainActivity.setFlags(Intent.FLAG_ACTIVITY_C)
+        startActivityIfNeeded(openMainActivity, 0);
+        /*Intent startIntent = new Intent(this, MainActivity.class);
+        startIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        this.startActivity(startIntent);
+        finish();
+        */
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Baby Check");
         builder.setMessage("Is there a baby in the car?");
