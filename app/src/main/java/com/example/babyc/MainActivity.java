@@ -28,10 +28,13 @@ import android.os.PowerManager;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.ImageButton;
+import android.widget.PopupMenu;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -43,6 +46,9 @@ import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 
+import java.util.Timer;
+import java.util.TimerTask;
+
 public class MainActivity extends AppCompatActivity implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, View.OnClickListener {
 
 
@@ -51,22 +57,23 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     //our activation button
     public ImageButton btn;
     int connected = 0;
+    TextView StatusText; //Text above state box
     TextView CurrentState; //Text on screen that tells the user what he app recognizes they're doing.
+    Button langBtn;
     Long curTime; //Save and update current time with each UI update.
     Long curTime2; //saving time for alert without updating it with each UI update.
-    Boolean curTime2Lock = false;
 
     Boolean firstUpdate = true; //first time we update the UI?
     Boolean dialogOnScreen = false; //Is there a dialog on the screen currently?
+    Boolean EnglishMode = false;
     MediaPlayer mp;
 
     AlarmManager alarmManager;
     //alarm
     Boolean alarmSet = false;
 
-    //sharedpreferences
-    SharedPreferences prefs;
-    //SharedPreferences pref = context.getSharedPreferences(MY_PREFERENCE_NAME, Context.MODE_MULTI_PROCESS);
+    //sharedpreferences context
+    static private Context contextOfApplication;
 
     //dialog listener
     DialogInterface.OnClickListener listener = new DialogInterface.OnClickListener() {
@@ -97,24 +104,27 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     private boolean runningQOrLater =
             android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q;
 
-    private boolean activityTrackingEnabled;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
         //Shared prefs
-        prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        contextOfApplication = getApplicationContext();
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
         SharedPreferences.Editor editor = prefs.edit();
-        //if we don't have language settings saved, which is the first instance
+
+        //if we don't have language settings saved - default is English
         if(!(prefs.contains("English")) && !(prefs.contains("Hebrew")))
         {
-            editor.putBoolean("English", true);
-            editor.putBoolean("Hebrew", false);
+            Log.d("Shared pref","defining");
+            editor.putBoolean("English", false);
+            editor.putBoolean("Hebrew", true);
             editor.apply();
+            EnglishMode = true;
         }
 
+        //English Version
         if(prefs.getBoolean("English", true))
         {
             mp = MediaPlayer.create(this, R.raw.ringtone);
@@ -122,6 +132,8 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
             curTime = System.currentTimeMillis();
             btn = (ImageButton) findViewById(R.id.btn);
             btn.setImageResource(R.drawable.startbtn);
+            langBtn = (Button) findViewById(R.id.langButton);
+            StatusText = (TextView) findViewById(R.id.StatusTop);
             CurrentState = (TextView) findViewById(R.id.CurrentState);
             alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
             if (!Settings.canDrawOverlays(this)) {
@@ -136,9 +148,56 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                     .build();
 
             btn.setOnClickListener(this);
+            langBtn.setOnClickListener(new View.OnClickListener() {
+
+                @Override
+                public void onClick(View v) {
+                    //Creating the instance of PopupMenu
+                    PopupMenu popup = new PopupMenu(MainActivity.this, langBtn);
+                    //Inflating the Popup using xml file
+                    popup.getMenuInflater().inflate(R.menu.menu, popup.getMenu());
+
+                    //registering popup with OnMenuItemClickListener
+                    popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+                        public boolean onMenuItemClick(MenuItem item) {
+
+                            if (item.getItemId() == R.id.hebrew){
+                                Toast.makeText(MainActivity.this,"You Clicked : " + item.getTitle(), Toast.LENGTH_SHORT).show();
+
+                                editor.putBoolean("Hebrew", true);
+                                editor.putBoolean("English", false);
+                                editor.apply();
+                                new Timer().schedule(new TimerTask() {
+                                    @Override
+                                    public void run() {
+                                        triggerRebirth(contextOfApplication);
+                                    }
+                                }, 1000);
+                            }
+                            else if (item.getItemId() == R.id.english){
+                                Toast.makeText(MainActivity.this,"You Clicked : " + item.getTitle(), Toast.LENGTH_SHORT).show();
+                                editor.putBoolean("Hebrew", false);
+                                editor.putBoolean("English", true);
+                                editor.apply();
+                                //time restart task to the 'apply' process works
+                                new Timer().schedule(new TimerTask() {
+                                    @Override
+                                    public void run() {
+                                        triggerRebirth(contextOfApplication);
+                                    }
+                                }, 1000);
+                            }
+                            return true;
+                        }
+                    });
+
+                    popup.show();//showing popup menu
+                }
+            });
+
         }
 
-        //change stuff here to hebrew
+        //Hebrew Version
         else if (prefs.getBoolean("Hebrew", true))
         {
             mp = MediaPlayer.create(this, R.raw.ringtone);
@@ -146,8 +205,13 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
             curTime = System.currentTimeMillis();
             btn = (ImageButton) findViewById(R.id.btn);
             btn.setImageResource(R.drawable.startbtn);
+            langBtn = (Button) findViewById(R.id.langButton);
+            StatusText = (TextView) findViewById(R.id.StatusTop);
+            StatusText.setText("סטטוס נוכחי:");
             CurrentState = (TextView) findViewById(R.id.CurrentState);
             alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
+
+            //check if we can pop the app back to the screen from another app when the alarm goes off
             if (!Settings.canDrawOverlays(this)) {
                 Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:" + getPackageName()));
                 startActivityForResult(intent, 0);
@@ -160,12 +224,70 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                     .build();
 
             btn.setOnClickListener(this);
+
+            langBtn.setOnClickListener(new View.OnClickListener() {
+
+                @Override
+                public void onClick(View v) {
+                    //Creating the instance of PopupMenu
+                    PopupMenu popup = new PopupMenu(MainActivity.this, langBtn);
+                    //Inflating the Popup using xml file
+                    popup.getMenuInflater().inflate(R.menu.menu, popup.getMenu());
+
+                    //registering popup with OnMenuItemClickListener
+                    popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+                        public boolean onMenuItemClick(MenuItem item) {
+
+                            if (item.getItemId() == R.id.hebrew){
+                                Toast.makeText(MainActivity.this,"You Clicked : " + item.getTitle(), Toast.LENGTH_SHORT).show();
+
+                                editor.putBoolean("Hebrew", true);
+                                editor.putBoolean("English", false);
+                                editor.apply();
+                                new Timer().schedule(new TimerTask() {
+                                    @Override
+                                    public void run() {
+                                        triggerRebirth(contextOfApplication);
+                                    }
+                                }, 2000);
+                            }
+                            else if (item.getItemId() == R.id.english){
+                                Toast.makeText(MainActivity.this,"You Clicked : " + item.getTitle(), Toast.LENGTH_SHORT).show();
+                                editor.putBoolean("Hebrew", false);
+                                editor.putBoolean("English", true);
+                                editor.apply();
+                                new Timer().schedule(new TimerTask() {
+                                    @Override
+                                    public void run() {
+                                        triggerRebirth(contextOfApplication);
+                                    }
+                                }, 2000);
+                            }
+                            return true;
+                        }
+                    });
+
+                    popup.show();//showing popup menu
+                }
+            });
         }
+    }
+
+    public static Context getContextOfApplication(){
+        return contextOfApplication;
+    }
+
+    public void triggerRebirth(Context context) {
+        Intent mStartActivity = new Intent(context, MainActivity.class);
+        int mPendingIntentId = 123456;
+        PendingIntent mPendingIntent = PendingIntent.getActivity(context, mPendingIntentId,    mStartActivity, PendingIntent.FLAG_CANCEL_CURRENT);
+        AlarmManager mgr = (AlarmManager)context.getSystemService(Context.ALARM_SERVICE);
+        mgr.set(AlarmManager.RTC, System.currentTimeMillis() + 100, mPendingIntent);
+        System.exit(0);
     }
 
    // @RequiresApi(api = Build.VERSION_CODES.O) //for the dialog overlay type to work, it needs 26+ android instead of 23+
     private void showDialog(){
-
         //pop it back on screen
         Intent openMainActivity = new Intent(MainActivity.this, MainActivity.class);
         openMainActivity.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
@@ -208,7 +330,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
 
             }
             //change button image
-            btn.setImageResource(R.drawable.stopbtn);
+            btn.setImageResource(R.drawable.stopbtn2);
 
             Log.d("Connection", "connection good.");
             Intent intent = new Intent (MainActivity.this, ActivityRecognizedService.class);

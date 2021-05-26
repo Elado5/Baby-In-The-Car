@@ -2,6 +2,7 @@ package com.example.babyc;
 
 import android.app.IntentService;
 import android.app.Notification;
+import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
@@ -20,20 +21,25 @@ import java.util.List;
 @SuppressWarnings("ALL")
 public class ActivityRecognizedService extends IntentService {
 
+    //class d.Log tag
     private static final String TAG = "ActivityRecService";
+
+    // when driving detected -> true
     boolean inCar = false;
-    //TextView CS = (TextView)findViewById(R.id.CurrentState);
+    //builder
     public  ActivityRecognizedService(){
         super("ActivityRecognizedService");
     }
-    long systemtime = System.currentTimeMillis();
     public  ActivityRecognizedService(String name){ //another constructor
         super(name);
     }
-    //Shared prefs
-    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-    SharedPreferences.Editor editor = prefs.edit();
 
+    //Shared prefs -> taking context from mainactivty static context so we can use it
+    Context applicationContext =  MainActivity.getContextOfApplication();
+    SharedPreferences prefss = PreferenceManager.getDefaultSharedPreferences(applicationContext);
+    SharedPreferences.Editor editor = prefss.edit();
+
+    //when there's a result from the intent -> activate the 'handleDetectedActivity' function on it
     @Override
     protected void onHandleIntent(@Nullable Intent intent) {
         if(ActivityRecognitionResult.hasResult(intent)){
@@ -43,9 +49,9 @@ public class ActivityRecognizedService extends IntentService {
     }
 
 
-
     private void handleDetectedActivity(List<DetectedActivity> probableActivities){
-        if(prefs.getBoolean("English", true))
+        //english version
+        if(prefss.getBoolean("English", true))
         {
         for (DetectedActivity activity: probableActivities){
             switch(activity.getType()){
@@ -125,7 +131,8 @@ public class ActivityRecognizedService extends IntentService {
             }
         }
     }
-        else if (prefs.getBoolean("Hebrew", true))
+        //Hebrew version
+        else if (prefss.getBoolean("Hebrew", true))
         {
             for (DetectedActivity activity: probableActivities){
                 switch(activity.getType()){
