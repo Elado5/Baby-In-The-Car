@@ -136,10 +136,20 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
             StatusText = (TextView) findViewById(R.id.StatusTop);
             CurrentState = (TextView) findViewById(R.id.CurrentState);
             alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
-            if (!Settings.canDrawOverlays(this)) {
-                Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:" + getPackageName()));
-                startActivityForResult(intent, 0);
-            }
+
+
+            Toast.makeText(getBaseContext(),"allow display over apps", Toast.LENGTH_LONG).show();
+
+            new Timer().schedule(new TimerTask() {
+                @Override
+                public void run() {
+                    if (!Settings.canDrawOverlays(contextOfApplication)) {
+                        Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:" + getPackageName()));
+                        startActivityForResult(intent, 0);
+                    }
+                }
+            }, 3000);
+
 
             mApiClient = new GoogleApiClient.Builder(this)
                     .addApi(ActivityRecognition.API)
@@ -212,10 +222,16 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
             alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
 
             //check if we can pop the app back to the screen from another app when the alarm goes off
-            if (!Settings.canDrawOverlays(this)) {
-                Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:" + getPackageName()));
-                startActivityForResult(intent, 0);
-            }
+            Toast.makeText(getBaseContext(),"allow display over apps", Toast.LENGTH_LONG).show();
+            new Timer().schedule(new TimerTask() {
+                @Override
+                public void run() {
+                    if (!Settings.canDrawOverlays(contextOfApplication)) {
+                        Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:" + getPackageName()));
+                        startActivityForResult(intent, 0);
+                    }
+                }
+            }, 3000);
 
             mApiClient = new GoogleApiClient.Builder(this)
                     .addApi(ActivityRecognition.API)
