@@ -59,7 +59,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     int connected = 0;
     TextView StatusText; //Text above state box
     TextView CurrentState; //Text on screen that tells the user what he app recognizes they're doing.
-    Button langBtn;
+    Button langBtn; //pop up language menu
     Long curTime; //Save and update current time with each UI update.
     Long curTime2; //saving time for alert without updating it with each UI update.
 
@@ -69,13 +69,14 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     MediaPlayer mp;
 
     AlarmManager alarmManager;
+
     //alarm
     Boolean alarmSet = false;
 
-    //sharedpreferences context
+    //shared preferences context - static so we can use it in the ActivityRecognizedService class
     static private Context contextOfApplication;
 
-    //dialog listener
+    //alarm dialog listener
     DialogInterface.OnClickListener listener = new DialogInterface.OnClickListener() {
         @Override
         public void onClick(DialogInterface dialog, int which) {
@@ -146,6 +147,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
             //functions can use this info later, like changing stop button to the english one
             EnglishMode = true;
 
+            //media player for alarm
             mp = MediaPlayer.create(this, R.raw.ringtone);
             mp.setLooping(true); //make sure it loops
             curTime = System.currentTimeMillis();
@@ -156,18 +158,22 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
             CurrentState = (TextView) findViewById(R.id.CurrentState);
             alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
 
-
+            //can't draw app over other app? ask for permission via dialog
             if (!Settings.canDrawOverlays(this)) {
                 overlayPermissionDialog();
             }
 
+            //Goggle API client builder
             mApiClient = new GoogleApiClient.Builder(this)
                     .addApi(ActivityRecognition.API)
                     .addConnectionCallbacks(MainActivity.this)
                     .addOnConnectionFailedListener(MainActivity.this)
                     .build();
 
+            //setting click listener for start/stop button
             btn.setOnClickListener(this);
+
+            //language button functionality
             langBtn.setOnClickListener(new View.OnClickListener() {
 
                 @Override
@@ -381,14 +387,17 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     private void updateUI(Intent intent) {
         Log.d("updateUI", "got broadcast");
         Log.d("curTime comparison", curTime + "");
-        //if 20 seconds passed from last UI update
+        //if 20 seconds passed from last UI update or we don't have a previous update
         if(System.currentTimeMillis() > (curTime + 20000) || firstUpdate) {
 
             if(firstUpdate){
                 firstUpdate = false;
             }
 
+            //change 'current status' string via extra string from broadcast update
             CurrentState.setText(intent.getStringExtra("activityUpdate"));
+
+            //update current time variable
             curTime = System.currentTimeMillis();
 
             //check if the state is driving and set alarm for 2 minutes after it
@@ -528,7 +537,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         }
 
         else{
-            Toast.makeText(this, "You need to give permissiosns to activate the service", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "You need to give permissions to activate the service", Toast.LENGTH_SHORT).show();
         }
     }
 }
