@@ -24,8 +24,6 @@ public class ActivityRecognizedService extends IntentService {
     //class d.Log tag
     private static final String TAG = "ActivityRecService";
 
-    // when driving detected -> true
-    boolean inCar = false;
     //builder
     public  ActivityRecognizedService(){
         super("ActivityRecognizedService");
@@ -34,7 +32,7 @@ public class ActivityRecognizedService extends IntentService {
         super(name);
     }
 
-    //Shared prefs -> taking context from mainactivty static context so we can use it
+    //Shared prefs -> taking context from main activty static context so we can use it
     Context applicationContext =  MainActivity.getContextOfApplication();
     SharedPreferences prefss = PreferenceManager.getDefaultSharedPreferences(applicationContext);
     SharedPreferences.Editor editor = prefss.edit();
@@ -58,11 +56,9 @@ public class ActivityRecognizedService extends IntentService {
                 case DetectedActivity.IN_VEHICLE:{
                     Log.d(TAG, "handDetectedActivity: IN_VEHICLE" + activity.getConfidence());
                     if(activity.getConfidence() >= 75){
-                        //MainActivity.CurrentState.setText("Driving - In Car");
-                        //return "Driving - In Car";
-                        if (!inCar) { inCar = true; }
+
                         Intent intent = new Intent("updateIntent");
-                        intent.putExtra("activityUpdate","Current Activity:\n\nIn Vehicle");
+                        intent.putExtra("activityUpdate","In Vehicle");
                         sendBroadcast(intent);
                     }
 
@@ -72,47 +68,43 @@ public class ActivityRecognizedService extends IntentService {
                 case DetectedActivity.ON_BICYCLE:{
                     Log.d(TAG, "handDetectedActivity: ON_BICYCLE" + activity.getConfidence());
                     if(activity.getConfidence() >= 75){
-                        if (inCar) { inCar = false; }
                         Intent intent = new Intent("updateIntent");
-                        intent.putExtra("activityUpdate","Current Activity:\n\nOn Bike");
+                        intent.putExtra("activityUpdate","On Bike");
                         sendBroadcast(intent);
                     }
                 }break;
-                case DetectedActivity.ON_FOOT:{
-                    Log.d(TAG, "handDetectedActivity: ON_FOOT" + activity.getConfidence());
-                    if(activity.getConfidence() >= 75){
-                        if (inCar) { inCar = false; }
-                        Intent intent = new Intent("updateIntent");
-                        intent.putExtra("activityUpdate","Current Activity:\n\nOn Foot");
-                        sendBroadcast(intent);
-                    }
-                }break;
+
                 case DetectedActivity.RUNNING:{
                     Log.d(TAG, "handDetectedActivity: RUNNING" + activity.getConfidence());
                     if(activity.getConfidence() >= 75){
-                        if (inCar) { inCar = false; }
                         Intent intent = new Intent("updateIntent");
-                        intent.putExtra("activityUpdate","Current Activity:\n\nRunning");
+                        intent.putExtra("activityUpdate","Running");
                         sendBroadcast(intent);
                     }
                 }break;
                 case DetectedActivity.STILL:{
                     Log.d(TAG, "handDetectedActivity: STILL" + activity.getConfidence());
                     if(activity.getConfidence() >= 75){
-                        if (inCar) { inCar = false; }
                         Intent intent = new Intent("updateIntent");
-                        intent.putExtra("activityUpdate","Current Activity:\n\nStill");
+                        intent.putExtra("activityUpdate","Still");
                         sendBroadcast(intent);
                     }
                 }break;
                 case DetectedActivity.WALKING:{
                     Log.d(TAG, "handleDetectedActivity: WALKING" + activity.getConfidence());
                     if(activity.getConfidence() >= 75){
-                        if (inCar) { inCar = false; }
                         Intent intent = new Intent("updateIntent");
-                        intent.putExtra("activityUpdate","Current Activity:\n\nWalking");
+                        intent.putExtra("activityUpdate","Walking");
                         sendBroadcast(intent);
 
+                    }
+                }break;
+                case DetectedActivity.ON_FOOT:{
+                    Log.d(TAG, "handDetectedActivity: ON_FOOT" + activity.getConfidence());
+                    if(activity.getConfidence() >= 75){
+                        Intent intent = new Intent("updateIntent");
+                        intent.putExtra("activityUpdate","On Foot");
+                        sendBroadcast(intent);
                     }
                 }break;
                 case DetectedActivity.UNKNOWN:
@@ -120,8 +112,7 @@ public class ActivityRecognizedService extends IntentService {
                     Log.d(TAG, "handleDetectedActivity: UNKNOWN - " + activity.getConfidence());
                     Intent intent = new Intent("updateIntent");
                     if(activity.getConfidence() == 40) {
-                        if (inCar) { inCar = false; }
-                        intent.putExtra("activityUpdate", "Current Activity:\n\nUnrecognized");
+                        intent.putExtra("activityUpdate", "Unrecognized Activity");
                         sendBroadcast(intent);
                     }
 
@@ -141,7 +132,6 @@ public class ActivityRecognizedService extends IntentService {
                         if(activity.getConfidence() >= 75){
                             //MainActivity.CurrentState.setText("Driving - In Car");
                             //return "Driving - In Car";
-                            if (!inCar) { inCar = true; }
                             Intent intent = new Intent("updateIntent");
                             intent.putExtra("activityUpdate","פעילות נוכחית:\n\nברכב");
                             sendBroadcast(intent);
@@ -153,56 +143,52 @@ public class ActivityRecognizedService extends IntentService {
                     case DetectedActivity.ON_BICYCLE:{
                         Log.d(TAG, "handDetectedActivity: ON_BICYCLE" + activity.getConfidence());
                         if(activity.getConfidence() >= 75){
-                            if (inCar) { inCar = false; }
                             Intent intent = new Intent("updateIntent");
                             intent.putExtra("activityUpdate","פעילות נוכחית:\n\nאופניים");
-                            sendBroadcast(intent);
-                        }
-                    }break;
-                    case DetectedActivity.ON_FOOT:{
-                        Log.d(TAG, "handDetectedActivity: ON_FOOT" + activity.getConfidence());
-                        if(activity.getConfidence() >= 75){
-                            if (inCar) { inCar = false; }
-                            Intent intent = new Intent("updateIntent");
-                            intent.putExtra("activityUpdate","פעילות נוכחית:\n\nרגלית");
-                            sendBroadcast(intent);
-                        }
-                    }break;
-                    case DetectedActivity.RUNNING:{
-                        Log.d(TAG, "handDetectedActivity: RUNNING" + activity.getConfidence());
-                        if(activity.getConfidence() >= 75){
-                            if (inCar) { inCar = false; }
-                            Intent intent = new Intent("updateIntent");
-                            intent.putExtra("activityUpdate","פעילות נוכחית:\n\nריצה");
-                            sendBroadcast(intent);
-                        }
-                    }break;
-                    case DetectedActivity.STILL:{
-                        Log.d(TAG, "handDetectedActivity: STILL" + activity.getConfidence());
-                        if(activity.getConfidence() >= 75){
-                            if (inCar) { inCar = false; }
-                            Intent intent = new Intent("updateIntent");
-                            intent.putExtra("activityUpdate","פעילות נוכחית:\n\nדומם");
                             sendBroadcast(intent);
                         }
                     }break;
                     case DetectedActivity.WALKING:{
                         Log.d(TAG, "handleDetectedActivity: WALKING" + activity.getConfidence());
                         if(activity.getConfidence() >= 75){
-                            if (inCar) { inCar = false; }
                             Intent intent = new Intent("updateIntent");
-                            intent.putExtra("activityUpdate","פעילות נוכחית:\n\nהליכה");
+                            intent.putExtra("activityUpdate","הליכה");
                             sendBroadcast(intent);
 
                         }
                     }break;
+                    case DetectedActivity.RUNNING:{
+                        Log.d(TAG, "handDetectedActivity: RUNNING" + activity.getConfidence());
+                        if(activity.getConfidence() >= 75){
+                            Intent intent = new Intent("updateIntent");
+                            intent.putExtra("activityUpdate","ריצה");
+                            sendBroadcast(intent);
+                        }
+                    }break;
+                    case DetectedActivity.ON_FOOT:{
+                        Log.d(TAG, "handDetectedActivity: ON_FOOT" + activity.getConfidence());
+                        if(activity.getConfidence() >= 75){
+                            Intent intent = new Intent("updateIntent");
+                            intent.putExtra("activityUpdate","פעילות רגלית");
+                            sendBroadcast(intent);
+                        }
+                    }break;
+
+                    case DetectedActivity.STILL:{
+                        Log.d(TAG, "handDetectedActivity: STILL" + activity.getConfidence());
+                        if(activity.getConfidence() >= 75){
+                            Intent intent = new Intent("updateIntent");
+                            intent.putExtra("activityUpdate","דומם");
+                            sendBroadcast(intent);
+                        }
+                    }break;
+
                     case DetectedActivity.UNKNOWN:
                     {
                         Log.d(TAG, "handleDetectedActivity: UNKNOWN - " + activity.getConfidence());
                         Intent intent = new Intent("updateIntent");
                         if(activity.getConfidence() == 40) {
-                            if (inCar) { inCar = false; }
-                            intent.putExtra("activityUpdate", "פעילות נוכחית:\n\nלא מזוהה");
+                            intent.putExtra("activityUpdate", "פעילות לא מזוהה");
                             sendBroadcast(intent);
                         }
 
