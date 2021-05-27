@@ -59,7 +59,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     int connected = 0;
     TextView StatusText; //Text above state box
     TextView CurrentState; //Text on screen that tells the user what he app recognizes they're doing.
-    Button langBtn;
+    Button langBtn; //pop up language menu
     Long curTime; //Save and update current time with each UI update.
     Long curTime2; //saving time for alert without updating it with each UI update.
 
@@ -69,13 +69,14 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     MediaPlayer mp;
 
     AlarmManager alarmManager;
+
     //alarm
     Boolean alarmSet = false;
 
-    //sharedpreferences context
+    //shared preferences context - static so we can use it in the ActivityRecognizedService class
     static private Context contextOfApplication;
 
-    //dialog listener
+    //alarm dialog listener
     DialogInterface.OnClickListener listener = new DialogInterface.OnClickListener() {
         @Override
         public void onClick(DialogInterface dialog, int which) {
@@ -90,6 +91,22 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                     mp.pause();
                     mApiClient.disconnect();
                     removeActivityUpdates();
+                    break;
+            }
+        }
+    };
+
+    DialogInterface.OnClickListener listenerForOverlay = new DialogInterface.OnClickListener() {
+        @Override
+        public void onClick(DialogInterface dialog, int which) {
+            alarmSet = false; //reset it
+            switch (which) {
+                case Dialog.BUTTON_POSITIVE:
+                    //move to permission page
+                    Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:" + getPackageName()));
+                    startActivityForResult(intent, 0);
+                    break;
+                case Dialog.BUTTON_NEGATIVE:
                     break;
             }
         }
@@ -127,6 +144,10 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         //English Version
         if(prefs.getBoolean("English", true))
         {
+            //functions can use this info later, like changing stop button to the english one
+            EnglishMode = true;
+
+            //media player for alarm
             mp = MediaPlayer.create(this, R.raw.ringtone);
             mp.setLooping(true); //make sure it loops
             curTime = System.currentTimeMillis();
@@ -137,27 +158,22 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
             CurrentState = (TextView) findViewById(R.id.CurrentState);
             alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
 
+            //can't draw app over other app? ask for permission via dialog
+            if (!Settings.canDrawOverlays(this)) {
+                overlayPermissionDialog();
+            }
 
-            Toast.makeText(getBaseContext(),"allow display over apps", Toast.LENGTH_LONG).show();
-
-            new Timer().schedule(new TimerTask() {
-                @Override
-                public void run() {
-                    if (!Settings.canDrawOverlays(contextOfApplication)) {
-                        Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:" + getPackageName()));
-                        startActivityForResult(intent, 0);
-                    }
-                }
-            }, 3000);
-
-
+            //Goggle API client builder
             mApiClient = new GoogleApiClient.Builder(this)
                     .addApi(ActivityRecognition.API)
                     .addConnectionCallbacks(MainActivity.this)
                     .addOnConnectionFailedListener(MainActivity.this)
                     .build();
 
+            //setting click listener for start/stop button
             btn.setOnClickListener(this);
+
+            //language button functionality
             langBtn.setOnClickListener(new View.OnClickListener() {
 
                 @Override
@@ -172,7 +188,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                         public boolean onMenuItemClick(MenuItem item) {
 
                             if (item.getItemId() == R.id.hebrew){
-                                Toast.makeText(MainActivity.this,"You Clicked : " + item.getTitle(), Toast.LENGTH_SHORT).show();
+                                Toast.makeText(MainActivity.this,"פותח מחדש ב : " + item.getTitle(), Toast.LENGTH_SHORT).show();
 
                                 editor.putBoolean("Hebrew", true);
                                 editor.putBoolean("English", false);
@@ -182,20 +198,10 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                                     public void run() {
                                         triggerRebirth(contextOfApplication);
                                     }
-                                }, 1000);
+                                }, 2000);
                             }
                             else if (item.getItemId() == R.id.english){
-                                Toast.makeText(MainActivity.this,"You Clicked : " + item.getTitle(), Toast.LENGTH_SHORT).show();
-                                editor.putBoolean("Hebrew", false);
-                                editor.putBoolean("English", true);
-                                editor.apply();
-                                //time restart task to the 'apply' process works
-                                new Timer().schedule(new TimerTask() {
-                                    @Override
-                                    public void run() {
-                                        triggerRebirth(contextOfApplication);
-                                    }
-                                }, 1000);
+                                Toast.makeText(MainActivity.this,"Already in English mode", Toast.LENGTH_SHORT).show();
                             }
                             return true;
                         }
@@ -214,7 +220,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
             mp.setLooping(true); //make sure it loops
             curTime = System.currentTimeMillis();
             btn = (ImageButton) findViewById(R.id.btn);
-            btn.setImageResource(R.drawable.startbtn);
+            btn.setImageResource(R.drawable.btnheb);
             langBtn = (Button) findViewById(R.id.langButton);
             StatusText = (TextView) findViewById(R.id.StatusTop);
             StatusText.setText("סטטוס נוכחי:");
@@ -222,16 +228,9 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
             alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
 
             //check if we can pop the app back to the screen from another app when the alarm goes off
-            Toast.makeText(getBaseContext(),"allow display over apps", Toast.LENGTH_LONG).show();
-            new Timer().schedule(new TimerTask() {
-                @Override
-                public void run() {
-                    if (!Settings.canDrawOverlays(contextOfApplication)) {
-                        Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:" + getPackageName()));
-                        startActivityForResult(intent, 0);
-                    }
-                }
-            }, 3000);
+            if (!Settings.canDrawOverlays(this)) {
+                overlayPermissionDialog();
+            }
 
             mApiClient = new GoogleApiClient.Builder(this)
                     .addApi(ActivityRecognition.API)
@@ -255,20 +254,10 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                         public boolean onMenuItemClick(MenuItem item) {
 
                             if (item.getItemId() == R.id.hebrew){
-                                Toast.makeText(MainActivity.this,"You Clicked : " + item.getTitle(), Toast.LENGTH_SHORT).show();
-
-                                editor.putBoolean("Hebrew", true);
-                                editor.putBoolean("English", false);
-                                editor.apply();
-                                new Timer().schedule(new TimerTask() {
-                                    @Override
-                                    public void run() {
-                                        triggerRebirth(contextOfApplication);
-                                    }
-                                }, 2000);
+                                Toast.makeText(MainActivity.this,"מצב עברית כבר בשימוש", Toast.LENGTH_SHORT).show();
                             }
                             else if (item.getItemId() == R.id.english){
-                                Toast.makeText(MainActivity.this,"You Clicked : " + item.getTitle(), Toast.LENGTH_SHORT).show();
+                                Toast.makeText(MainActivity.this,"Reopening in : " + item.getTitle(), Toast.LENGTH_SHORT).show();
                                 editor.putBoolean("Hebrew", false);
                                 editor.putBoolean("English", true);
                                 editor.apply();
@@ -307,13 +296,8 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         //pop it back on screen
         Intent openMainActivity = new Intent(MainActivity.this, MainActivity.class);
         openMainActivity.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
-        //openMainActivity.setFlags(Intent.FLAG_ACTIVITY_C)
         startActivityIfNeeded(openMainActivity, 0);
-        /*Intent startIntent = new Intent(this, MainActivity.class);
-        startIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        this.startActivity(startIntent);
-        finish();
-        */
+
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Baby Check");
         builder.setMessage("Is there a baby in the car?");
@@ -321,14 +305,24 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         builder.setNegativeButton("I'm done, thanks",listener);
         builder.setCancelable(true);
         AlertDialog dialog = builder.create();
-        //dialog.getWindow().setType(WindowManager.LayoutParams.TYPE_SYSTEM_DIALOG);
 
-        /*notificationIntent.setAction(Intent.ACTION_MAIN);
-        notificationIntent.addCategory(Intent.CATEGORY_LAUNCHER);
-        notificationIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        */
         dialog.setCanceledOnTouchOutside(false);
         dialog.setCancelable(false);
+        dialog.show();
+    }
+
+    private void overlayPermissionDialog(){
+        //pop it back on screen
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Permission Needed");
+        builder.setMessage("Please give the app the 'overlay over other apps' permission for it to work properly.");
+        builder.setPositiveButton("OK",listenerForOverlay);
+        builder.setNegativeButton("Ask me next time",listenerForOverlay);
+        builder.setCancelable(true);
+        AlertDialog dialog = builder.create();
+
+        dialog.setCanceledOnTouchOutside(false);
         dialog.show();
     }
 
@@ -346,8 +340,14 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
 
             }
             //change button image
-            btn.setImageResource(R.drawable.stopbtn2);
+            if(EnglishMode)
+            {
+                btn.setImageResource(R.drawable.stopbtn);
+            }
+            else{
+                btn.setImageResource(R.drawable.btn2heb);
 
+            }
             Log.d("Connection", "connection good.");
             Intent intent = new Intent (MainActivity.this, ActivityRecognizedService.class);
             PendingIntent pendingIntent = PendingIntent.getService(MainActivity.this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
@@ -387,14 +387,17 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     private void updateUI(Intent intent) {
         Log.d("updateUI", "got broadcast");
         Log.d("curTime comparison", curTime + "");
-        //if 20 seconds passed from last UI update
+        //if 20 seconds passed from last UI update or we don't have a previous update
         if(System.currentTimeMillis() > (curTime + 20000) || firstUpdate) {
 
             if(firstUpdate){
                 firstUpdate = false;
             }
 
+            //change 'current status' string via extra string from broadcast update
             CurrentState.setText(intent.getStringExtra("activityUpdate"));
+
+            //update current time variable
             curTime = System.currentTimeMillis();
 
             //check if the state is driving and set alarm for 2 minutes after it
@@ -534,7 +537,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         }
 
         else{
-            Toast.makeText(this, "You need to give permissiosns to activate the service", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "You need to give permissions to activate the service", Toast.LENGTH_SHORT).show();
         }
     }
 }
