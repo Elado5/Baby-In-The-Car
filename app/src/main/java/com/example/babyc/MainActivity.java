@@ -300,9 +300,17 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
 
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Baby Check");
-        builder.setMessage("Is there a baby in the car?");
-        builder.setPositiveButton("Keep running the service",listener);
-        builder.setNegativeButton("I'm done, thanks",listener);
+        if(EnglishMode)
+        {
+            builder.setMessage("Is there a baby in the car?");
+            builder.setPositiveButton("Continue", listener);
+            builder.setNegativeButton("Stop", listener);
+        }
+        else{
+            builder.setMessage("האם יש תינוק ברכב?");
+            builder.setPositiveButton("המשך לפעול", listener);
+            builder.setNegativeButton("סיימתי, תודה", listener);
+        }
         builder.setCancelable(true);
         AlertDialog dialog = builder.create();
 
@@ -401,20 +409,21 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
             curTime = System.currentTimeMillis();
 
             //check if the state is driving (in this case - still, because it's for debug) and set alarm for 2 minutes after it
-            if(CurrentState.getText().toString().equals("Current Activity:\n\nStill") && !alarmSet && !dialogOnScreen){
+            if( (CurrentState.getText().toString().equals("Still") || (CurrentState.getText().toString().equals("דומם")))  && !alarmSet && !dialogOnScreen){
                 curTime2 = System.currentTimeMillis();
                 Log.d("Alarm", "Set");
+                Toast.makeText(contextOfApplication, "Alarm is Set", Toast.LENGTH_SHORT).show();
                 alarmSet = true;
             }
 
-            /*
+
             //car version
-            if(CurrentState.getText().toString().equals("Current Activity:\n\nIn Vehicle") && !alarmSet && !dialogOnScreen){
+            /*if(CurrentState.getText().toString().equals("In Vehicle")||CurrentState.getText().toString().equals("בנסיעה") && !alarmSet && !dialogOnScreen){
                 curTime2 = System.currentTimeMillis();
                 Log.d("Alarm", "Set");
                 alarmSet = true;
-            }
-             */
+            }*/
+
 
             /*
             //car version - real version - 3 minutes (180 seconds) - activate only if state changed from ''in vehicle''

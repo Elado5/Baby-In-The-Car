@@ -133,7 +133,7 @@ public class ActivityRecognizedService extends IntentService {
                             //MainActivity.CurrentState.setText("Driving - In Car");
                             //return "Driving - In Car";
                             Intent intent = new Intent("updateIntent");
-                            intent.putExtra("activityUpdate","פעילות נוכחית:\n\nברכב");
+                            intent.putExtra("activityUpdate","בנסיעה");
                             sendBroadcast(intent);
                         }
 
@@ -144,7 +144,7 @@ public class ActivityRecognizedService extends IntentService {
                         Log.d(TAG, "handDetectedActivity: ON_BICYCLE" + activity.getConfidence());
                         if(activity.getConfidence() >= 75){
                             Intent intent = new Intent("updateIntent");
-                            intent.putExtra("activityUpdate","פעילות נוכחית:\n\nאופניים");
+                            intent.putExtra("activityUpdate","אופניים");
                             sendBroadcast(intent);
                         }
                     }break;
