@@ -60,6 +60,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     TextView StatusText; //Text above state box
     TextView CurrentState; //Text on screen that tells the user what he app recognizes they're doing.
     Button langBtn; //pop up language menu
+    Button helpBtn; //pop up help menu
     Long curTime; //Save and update current time with each UI update.
     Long curTime2; //saving time for alert without updating it with each UI update.
 
@@ -130,6 +131,13 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         contextOfApplication = getApplicationContext();
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
         SharedPreferences.Editor editor = prefs.edit();
+
+        if(!(prefs.contains("alarmDelay"))){
+            editor.putInt("alarmDelay", 150);
+            editor.apply();
+        }
+
+        helpBtn = (Button) findViewById(R.id.helper);
 
         //if we don't have language settings saved - default is English
         if(!(prefs.contains("English")) && !(prefs.contains("Hebrew")))
@@ -276,6 +284,35 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                 }
             });
         }
+
+        helpBtn.setOnClickListener(new View.OnClickListener() {
+
+            @Override
+            public void onClick(View v) {
+                //Creating the instance of PopupMenu
+                PopupMenu popup = new PopupMenu(MainActivity.this, langBtn);
+                //Inflating the Popup using xml file
+                popup.getMenuInflater().inflate(R.menu.helpmenu, popup.getMenu());
+
+                //registering popup with OnMenuItemClickListener
+                popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+                    public boolean onMenuItemClick(MenuItem item) {
+
+                        if (item.getItemId() == R.id.explanation){
+                            Toast.makeText(MainActivity.this,"מצב עברית כבר בשימוש", Toast.LENGTH_SHORT).show();
+                        }
+                        else if (item.getItemId() == R.id.alarmdelay){
+                            Intent intent = new Intent(MainActivity.this, AlarmDelay.class);
+                            startActivity(intent);
+                        }
+                        return true;
+                    }
+                });
+
+                popup.show();//showing popup menu
+            }
+        });
+
     }
 
     public static Context getContextOfApplication(){
@@ -331,6 +368,33 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         AlertDialog dialog = builder.create();
 
         dialog.setCanceledOnTouchOutside(false);
+        dialog.show();
+    }
+
+    private void HelpDialog(){
+        //pop it back on screen
+        Intent openMainActivity = new Intent(MainActivity.this, MainActivity.class);
+        openMainActivity.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+        startActivityIfNeeded(openMainActivity, 0);
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Baby Check");
+        if(EnglishMode)
+        {
+            builder.setMessage("Is there a baby in the car?");
+            builder.setPositiveButton("Continue", listener);
+            builder.setNegativeButton("Stop", listener);
+        }
+        else{
+            builder.setMessage("האם יש תינוק ברכב?");
+            builder.setPositiveButton("המשך לפעול", listener);
+            builder.setNegativeButton("סיימתי, תודה", listener);
+        }
+        builder.setCancelable(true);
+        AlertDialog dialog = builder.create();
+
+        dialog.setCanceledOnTouchOutside(false);
+        dialog.setCancelable(false);
         dialog.show();
     }
 

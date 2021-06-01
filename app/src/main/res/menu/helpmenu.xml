@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+        <item
+            android:id="@+id/explanation"
+            android:title="@string/explanation" />
+        <item
+            android:id="@+id/alarmdelay"
+            android:title="@string/change_alarm_timing"/>
+</menu>

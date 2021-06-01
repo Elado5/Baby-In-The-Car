@@ -9,7 +9,7 @@
     <uses-permission android:name="android.permission.SET_ALARM" />
     <uses-permission android:name="com.android.alarm.permission.SET_ALARM" />
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
 
     <application
         android:allowBackup="true"
@@ -18,11 +18,8 @@
         android:roundIcon="@mipmap/bbicon_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme.NoActionBar"
-        android:usesCleartextTraffic="true"
-        android:launchMode="singleTask"
-        >
-        <activity android:name=".DialogActivity" android:theme="@android:style/Theme.Translucent.NoTitleBar" />
-
+        android:usesCleartextTraffic="true">
+        <activity android:name=".AlarmDelay"></activity>
         <activity
             android:name=".MainActivity"
             android:screenOrientation="portrait">

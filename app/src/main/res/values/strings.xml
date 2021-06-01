@@ -18,4 +18,11 @@
     <string name="english">English</string>
     <string name="hebrew">Hebrew</string>
     <string name="Hebrew">עברית</string>
+    <string name="explanation">Explanation</string>
+    <string name="change_alarm_timing">Change Alarm Timing</string>
+    <string name="help">Help</string>
+    <string name="apply">Apply</string>
+    <string name="cancel">Cancel</string>
+    <string name="how_many_seconds">How many seconds?</string>
+    <string name="input_seconds">Input Seconds</string>
 </resources>
