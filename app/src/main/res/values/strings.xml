@@ -24,5 +24,5 @@
     <string name="apply">Apply</string>
     <string name="cancel">Cancel</string>
     <string name="how_many_seconds">How many seconds?</string>
-    <string name="input_seconds">Input Seconds</string>
+    <string name="input_seconds">How many seconds after you stop driving?</string>
 </resources>

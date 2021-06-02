@@ -73,6 +73,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
 
     //alarm
     Boolean alarmSet = false;
+    int alarmDelaySeconds = 0;
 
     //shared preferences context - static so we can use it in the ActivityRecognizedService class
     static private Context contextOfApplication;
@@ -132,10 +133,15 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
         SharedPreferences.Editor editor = prefs.edit();
 
+
         if(!(prefs.contains("alarmDelay"))){
             editor.putInt("alarmDelay", 150);
             editor.apply();
         }
+
+        //150 is value if it doesn't exist
+        alarmDelaySeconds = prefs.getInt("alarmDelay",150);
+
 
         helpBtn = (Button) findViewById(R.id.helper);
 
@@ -299,7 +305,15 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                     public boolean onMenuItemClick(MenuItem item) {
 
                         if (item.getItemId() == R.id.explanation){
-                            Toast.makeText(MainActivity.this,"מצב עברית כבר בשימוש", Toast.LENGTH_SHORT).show();
+                            ViewDialog explanationAlert = new ViewDialog();
+                            explanationAlert.showDialog(MainActivity.this,"This app will" +
+                                    " help never forget your baby in the car.\n\n" +
+                                    "It uses Google's smart activity recognition service to" +
+                                    " identify what you're doing every set amount of time.\nIf" +
+                                    " you start driving and then stop for a few minutes (changable)," +
+                                    " it will trigger an alarm that will definitely get your" +
+                                    " attention.\n" +
+                                    "\nHave a nice drive!");
                         }
                         else if (item.getItemId() == R.id.alarmdelay){
                             Intent intent = new Intent(MainActivity.this, AlarmDelay.class);
@@ -459,8 +473,8 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     private void updateUI(Intent intent) {
         Log.d("updateUI", "got broadcast");
         Log.d("curTime comparison", curTime + "");
-        //if 20 seconds passed from last UI update or we don't have a previous update
-        if(System.currentTimeMillis() > (curTime + 20000) || firstUpdate) {
+        //if 10 seconds passed from last UI update or we don't have a previous update
+        if(System.currentTimeMillis() > (curTime + 10000) || firstUpdate) {
 
             if(firstUpdate){
                 firstUpdate = false;
@@ -481,7 +495,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
             }
 
 
-            //car version
+            //car version alarm set
             /*if(CurrentState.getText().toString().equals("In Vehicle")||CurrentState.getText().toString().equals("בנסיעה") && !alarmSet && !dialogOnScreen){
                 curTime2 = System.currentTimeMillis();
                 Log.d("Alarm", "Set");
@@ -490,8 +504,8 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
 
 
             /*
-            //car version - real version - 3 minutes (180 seconds) - activate only if state changed from ''in vehicle''
-            if(alarmSet && System.currentTimeMillis() > curTime2 + 1000 * 180 && !(CurrentState.getText().toString().equals("Current Activity:\n\nIn Vehicle")) ){
+            //car version - real version - using alarmDelaySeconds - activate only if state changed from ''in vehicle''
+            if(alarmSet && System.currentTimeMillis() > curTime2 + 1000 * alarmDelaySeconds && !(CurrentState.getText().toString().equals("Current Activity:\n\nIn Vehicle")) ){
                 PowerManager pm = (PowerManager) getApplicationContext().getSystemService(Context.POWER_SERVICE);
                 PowerManager.WakeLock wakeLock = pm.newWakeLock(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
                         ,  "BabyC: Wake Up Screen");
