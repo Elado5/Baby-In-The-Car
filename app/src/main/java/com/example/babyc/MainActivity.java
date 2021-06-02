@@ -457,8 +457,12 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                  mIsReceiverRegistered = false;
              }
              //reset button
-             btn.setImageResource(R.drawable.startbtn);
-
+             if(EnglishMode) {
+                 btn.setImageResource(R.drawable.startbtn);
+             }
+             else{
+                 btn.setImageResource(R.drawable.btnheb);
+             }
              Intent intent = new Intent (MainActivity.this, ActivityRecognizedService.class);
              PendingIntent pendingIntent = PendingIntent.getService(MainActivity.this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
              ActivityRecognitionClient activityRecognitionClient = ActivityRecognition.getClient(this);
