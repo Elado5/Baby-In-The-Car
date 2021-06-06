@@ -224,7 +224,6 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                     popup.show();//showing popup menu
                 }
             });
-
         }
 
         //Hebrew Version
@@ -491,23 +490,24 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
             curTime = System.currentTimeMillis();
 
             //check if the state is driving (in this case - still, because it's for debug) and set alarm for 2 minutes after it
+            /*
             if( (CurrentState.getText().toString().equals("Still") || (CurrentState.getText().toString().equals("דומם")))  && !alarmSet && !dialogOnScreen){
                 curTime2 = System.currentTimeMillis();
                 Log.d("Alarm", "Set");
                 Toast.makeText(contextOfApplication, "Alarm is Set", Toast.LENGTH_SHORT).show();
                 alarmSet = true;
             }
-
+            */
 
             //car version alarm set
-            /*if(CurrentState.getText().toString().equals("In Vehicle")||CurrentState.getText().toString().equals("בנסיעה") && !alarmSet && !dialogOnScreen){
+            if(CurrentState.getText().toString().equals("In Vehicle")||CurrentState.getText().toString().equals("בנסיעה") && !alarmSet && !dialogOnScreen){
                 curTime2 = System.currentTimeMillis();
                 Log.d("Alarm", "Set");
                 alarmSet = true;
-            }*/
+            }
 
 
-            /*
+
             //car version - real version - using alarmDelaySeconds - activate only if state changed from ''in vehicle''
             if(alarmSet && System.currentTimeMillis() > curTime2 + 1000 * alarmDelaySeconds && !(CurrentState.getText().toString().equals("Current Activity:\n\nIn Vehicle")) ){
                 PowerManager pm = (PowerManager) getApplicationContext().getSystemService(Context.POWER_SERVICE);
@@ -520,23 +520,22 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                 showDialog();
                 alarmSet = false;
             }
-           */
+
 
             //activate alert dialog if x seconds passed
+            /*
             if(alarmSet && System.currentTimeMillis() > curTime2 + 1000 * 40){
                 PowerManager pm = (PowerManager) getApplicationContext().getSystemService(Context.POWER_SERVICE);
                 PowerManager.WakeLock wakeLock = pm.newWakeLock(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
                         ,  "BabyC: Wake Up Screen");
 
-                wakeLock.acquire(10*60*100L /*30 seconds*/);
+                wakeLock.acquire(10*60*100L); //30 seconds
                 mp.start();
                 dialogOnScreen = true; //the dialog will start in the next line so we don't want multiple dialogs to stack.
-                /*if (super.isDestroyed()){
-                }*/
                 showDialog();
                 alarmSet = false;
             }
-
+            */
 
 
 
