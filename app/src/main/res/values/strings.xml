@@ -25,4 +25,8 @@
     <string name="cancel">Cancel</string>
     <string name="how_many_seconds">How many seconds?</string>
     <string name="input_seconds">How many seconds after you stop driving?</string>
+    <string name="location_message">Hi, this is an automatic message, I did not respond to the alarm of a "baby in the car" protection app. This is the my current location:</string>
+    <string name="SMS_Settings">SMS Settings</string>
+    <string name="SMS_hint">Send Location SMS to this number</string>
+    <string name="SMS_Target_Explanation">We will send an automatic message with your location to that number if you don\'t respond to the alarm for two minutes</string>
 </resources>

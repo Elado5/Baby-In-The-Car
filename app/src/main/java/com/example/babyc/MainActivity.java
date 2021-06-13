@@ -6,6 +6,7 @@ import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
@@ -20,6 +21,9 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Build;
@@ -27,6 +31,7 @@ import android.os.Bundle;
 import android.os.PowerManager;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
+import android.telephony.SmsManager;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -46,6 +51,7 @@ import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 
+import java.util.ArrayList;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -63,10 +69,14 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     Button helpBtn; //pop up help menu
     Long curTime; //Save and update current time with each UI update.
     Long curTime2; //saving time for alert without updating it with each UI update.
+    Long curTimeForDialog; //saving time to check if x time passed since alert dialog is on screen.
 
     Boolean firstUpdate = true; //first time we update the UI?
-    Boolean dialogOnScreen = false; //Is there a dialog on the screen currently?
-    Boolean EnglishMode = false;
+    Boolean dialogOnScreen = false; //Is there an alert dialog on the screen currently?
+    Boolean firstDialogCheck = false; //bool for first time the dialog pops up.
+    Boolean EnglishMode = false; //is English mode active?
+    String PhoneNum = "";
+
     MediaPlayer mp;
 
     AlarmManager alarmManager;
@@ -133,6 +143,9 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
         SharedPreferences.Editor editor = prefs.edit();
 
+        if(prefs.contains("SMS_Number")){
+            PhoneNum = prefs.getString("SMS_Number", "");
+        }
 
         if(!(prefs.contains("alarmDelay"))){
             editor.putInt("alarmDelay", 150);
@@ -310,7 +323,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                                     " help never forget your baby in the car.\n\n" +
                                     "It uses Google's smart activity recognition service to" +
                                     " identify what you're doing every set amount of time.\nIf" +
-                                    " you start driving and then stop for a few minutes (changable)," +
+                                    " you start driving and then stop for a few minutes (changeable)," +
                                     " it will trigger an alarm that will definitely get your" +
                                     " attention.\n" +
                                     "\nHave a nice drive!");
@@ -318,6 +331,23 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                         else if (item.getItemId() == R.id.alarmdelay){
                             Intent intent = new Intent(MainActivity.this, AlarmDelay.class);
                             startActivity(intent);
+                        }
+                        else if (item.getItemId() == R.id.SMS_Settings)
+                        {
+                            if (ContextCompat.checkSelfPermission(contextOfApplication, android.Manifest.permission.ACCESS_FINE_LOCATION) ==
+                                    PackageManager.PERMISSION_GRANTED &&
+                                    ContextCompat.checkSelfPermission(contextOfApplication, android.Manifest.permission.ACCESS_COARSE_LOCATION) ==
+                                            PackageManager.PERMISSION_GRANTED)
+                            {
+                                Intent intent = new Intent(MainActivity.this, SMS_Settings.class);
+                                startActivity(intent);
+                            }
+                            else{
+                                ActivityCompat.requestPermissions(this, new String[] {
+                                                Manifest.permission.ACCESS_FINE_LOCATION,
+                                                Manifest.permission.ACCESS_COARSE_LOCATION },
+                                        TAG_CODE_PERMISSION_LOCATION);
+                            }
                         }
                         return true;
                     }
@@ -382,33 +412,6 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         AlertDialog dialog = builder.create();
 
         dialog.setCanceledOnTouchOutside(false);
-        dialog.show();
-    }
-
-    private void HelpDialog(){
-        //pop it back on screen
-        Intent openMainActivity = new Intent(MainActivity.this, MainActivity.class);
-        openMainActivity.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
-        startActivityIfNeeded(openMainActivity, 0);
-
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Baby Check");
-        if(EnglishMode)
-        {
-            builder.setMessage("Is there a baby in the car?");
-            builder.setPositiveButton("Continue", listener);
-            builder.setNegativeButton("Stop", listener);
-        }
-        else{
-            builder.setMessage("האם יש תינוק ברכב?");
-            builder.setPositiveButton("המשך לפעול", listener);
-            builder.setNegativeButton("סיימתי, תודה", listener);
-        }
-        builder.setCancelable(true);
-        AlertDialog dialog = builder.create();
-
-        dialog.setCanceledOnTouchOutside(false);
-        dialog.setCancelable(false);
         dialog.show();
     }
 
@@ -478,6 +481,18 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         Log.d("updateUI", "got broadcast");
         Log.d("curTime comparison", curTime + "");
         //if 10 seconds passed from last UI update or we don't have a previous update
+
+        if(dialogOnScreen && !firstDialogCheck){
+            firstDialogCheck = true;
+            curTimeForDialog = System.currentTimeMillis();
+        }
+
+        if(dialogOnScreen && firstDialogCheck){
+            LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+            sendLocationSMS(locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, (LocationListener) this);
+);
+        }
+
         if(System.currentTimeMillis() > (curTime + 10000) || firstUpdate) {
 
             if(firstUpdate){
@@ -542,6 +557,28 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
 
 
 
+        }
+    }
+
+    public void sendLocationSMS(Location currentLocation) {
+
+
+        //check time passed after alarm passed
+        {
+        }
+        if(!PhoneNum.equals("")) {
+            String message = getResources().getString(R.string.location_message);
+            SmsManager sms = SmsManager.getDefault();
+            StringBuffer smsBody = new StringBuffer();
+            smsBody.append(message);
+            smsBody.append("\n");
+            smsBody.append("http://maps.google.com?q=");
+            smsBody.append(currentLocation.getLatitude());
+            smsBody.append(",");
+            smsBody.append(currentLocation.getLongitude());
+            ArrayList<String> parts = sms.divideMessage(smsBody.toString());
+            sms.sendMultipartTextMessage(PhoneNum, null, parts, null, null);
+            //sms.sendTextMessage("6505551212", null, smsBody.toString(), null, null);
         }
     }
 
