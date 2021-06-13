@@ -75,6 +75,10 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     Boolean dialogOnScreen = false; //Is there an alert dialog on the screen currently?
     Boolean firstDialogCheck = false; //bool for first time the dialog pops up.
     Boolean EnglishMode = false; //is English mode active?
+
+    private static final int MY_PERMISSIONS_REQUEST_SEND_SMS = 1;
+    private static final int MY_PERMISSIONS_REQUEST_Location = 0;
+
     String PhoneNum = "";
 
     MediaPlayer mp;
@@ -332,21 +336,26 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                             Intent intent = new Intent(MainActivity.this, AlarmDelay.class);
                             startActivity(intent);
                         }
-                        else if (item.getItemId() == R.id.SMS_Settings)
+                        else if (item.getItemId() == R.id.SMS_S)
                         {
-                            if (ContextCompat.checkSelfPermission(contextOfApplication, android.Manifest.permission.ACCESS_FINE_LOCATION) ==
-                                    PackageManager.PERMISSION_GRANTED &&
-                                    ContextCompat.checkSelfPermission(contextOfApplication, android.Manifest.permission.ACCESS_COARSE_LOCATION) ==
-                                            PackageManager.PERMISSION_GRANTED)
-                            {
+                            boolean isBlocked =  shouldShowRequestPermissionRationale(Manifest.permission.SEND_SMS);
+
+                            if (contextOfApplication.checkSelfPermission(Manifest.permission.SEND_SMS)
+                                    !=
+                                    PackageManager.PERMISSION_GRANTED) {
+                                Log.d("SMS", "permission not granted");
+                                // Permission not yet granted. Use requestPermissions().
+                                // MY_PERMISSIONS_REQUEST_SEND_SMS is an
+                                // app-defined int constant. The callback method gets the
+                                // result of the request.
+                                ActivityCompat.requestPermissions(MainActivity.this,
+                                        new String[]{Manifest.permission.SEND_SMS},
+                                        1);
+                                Toast.makeText(contextOfApplication, "Please allow 'SEND SMS' permission in phone settings.", Toast.LENGTH_SHORT).show();
+                            } else {
+                                // Permission already granted. Enable the SMS button.
                                 Intent intent = new Intent(MainActivity.this, SMS_Settings.class);
                                 startActivity(intent);
-                            }
-                            else{
-                                ActivityCompat.requestPermissions(this, new String[] {
-                                                Manifest.permission.ACCESS_FINE_LOCATION,
-                                                Manifest.permission.ACCESS_COARSE_LOCATION },
-                                        TAG_CODE_PERMISSION_LOCATION);
                             }
                         }
                         return true;
@@ -489,8 +498,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
 
         if(dialogOnScreen && firstDialogCheck){
             LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-            sendLocationSMS(locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, (LocationListener) this);
-);
+            //sendLocationSMS(locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, (LocationListener) this));
         }
 
         if(System.currentTimeMillis() > (curTime + 10000) || firstUpdate) {

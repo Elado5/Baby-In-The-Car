@@ -7,6 +7,6 @@
             android:id="@+id/alarmdelay"
             android:title="@string/change_alarm_timing"/>
         <item
-            android:id="@+id/SMS_Settings"
+            android:id="@+id/SMS_S"
             android:title="@string/SMS_Settings"/>
 </menu>
