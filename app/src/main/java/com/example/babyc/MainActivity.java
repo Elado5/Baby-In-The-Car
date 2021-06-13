@@ -21,6 +21,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -28,6 +29,7 @@ import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Looper;
 import android.os.PowerManager;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
@@ -77,8 +79,10 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     Boolean EnglishMode = false; //is English mode active?
 
     private static final int MY_PERMISSIONS_REQUEST_SEND_SMS = 1;
-    private static final int MY_PERMISSIONS_REQUEST_Location = 0;
+    //private static final int MY_PERMISSIONS_REQUEST_Location = 0;
+    public static final int MY_PERMISSIONS_REQUEST_LOCATION = 99;
 
+    Location mylocation;
     String PhoneNum = "";
 
     MediaPlayer mp;
@@ -147,25 +151,24 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
         SharedPreferences.Editor editor = prefs.edit();
 
-        if(prefs.contains("SMS_Number")){
+        if (prefs.contains("SMS_Number")) {
             PhoneNum = prefs.getString("SMS_Number", "");
         }
 
-        if(!(prefs.contains("alarmDelay"))){
+        if (!(prefs.contains("alarmDelay"))) {
             editor.putInt("alarmDelay", 150);
             editor.apply();
         }
 
         //150 is value if it doesn't exist
-        alarmDelaySeconds = prefs.getInt("alarmDelay",150);
+        alarmDelaySeconds = prefs.getInt("alarmDelay", 150);
 
 
         helpBtn = (Button) findViewById(R.id.helper);
 
         //if we don't have language settings saved - default is English
-        if(!(prefs.contains("English")) && !(prefs.contains("Hebrew")))
-        {
-            Log.d("Shared pref","defining");
+        if (!(prefs.contains("English")) && !(prefs.contains("Hebrew"))) {
+            Log.d("Shared pref", "defining");
             editor.putBoolean("English", false);
             editor.putBoolean("Hebrew", true);
             editor.apply();
@@ -173,8 +176,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         }
 
         //English Version
-        if(prefs.getBoolean("English", true))
-        {
+        if (prefs.getBoolean("English", true)) {
             //functions can use this info later, like changing stop button to the english one
             EnglishMode = true;
 
@@ -218,8 +220,8 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                     popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
                         public boolean onMenuItemClick(MenuItem item) {
 
-                            if (item.getItemId() == R.id.hebrew){
-                                Toast.makeText(MainActivity.this,"פותח מחדש ב : " + item.getTitle(), Toast.LENGTH_SHORT).show();
+                            if (item.getItemId() == R.id.hebrew) {
+                                Toast.makeText(MainActivity.this, "פותח מחדש ב : " + item.getTitle(), Toast.LENGTH_SHORT).show();
 
                                 editor.putBoolean("Hebrew", true);
                                 editor.putBoolean("English", false);
@@ -230,9 +232,8 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                                         triggerRebirth(contextOfApplication);
                                     }
                                 }, 2000);
-                            }
-                            else if (item.getItemId() == R.id.english){
-                                Toast.makeText(MainActivity.this,"Already in English mode", Toast.LENGTH_SHORT).show();
+                            } else if (item.getItemId() == R.id.english) {
+                                Toast.makeText(MainActivity.this, "Already in English mode", Toast.LENGTH_SHORT).show();
                             }
                             return true;
                         }
@@ -245,8 +246,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         }
 
         //Hebrew Version
-        else if (prefs.getBoolean("Hebrew", true))
-        {
+        else if (prefs.getBoolean("Hebrew", true)) {
             mp = MediaPlayer.create(this, R.raw.ringtone);
             mp.setLooping(true); //make sure it loops
             curTime = System.currentTimeMillis();
@@ -284,11 +284,10 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                     popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
                         public boolean onMenuItemClick(MenuItem item) {
 
-                            if (item.getItemId() == R.id.hebrew){
-                                Toast.makeText(MainActivity.this,"מצב עברית כבר בשימוש", Toast.LENGTH_SHORT).show();
-                            }
-                            else if (item.getItemId() == R.id.english){
-                                Toast.makeText(MainActivity.this,"Reopening in : " + item.getTitle(), Toast.LENGTH_SHORT).show();
+                            if (item.getItemId() == R.id.hebrew) {
+                                Toast.makeText(MainActivity.this, "מצב עברית כבר בשימוש", Toast.LENGTH_SHORT).show();
+                            } else if (item.getItemId() == R.id.english) {
+                                Toast.makeText(MainActivity.this, "Reopening in : " + item.getTitle(), Toast.LENGTH_SHORT).show();
                                 editor.putBoolean("Hebrew", false);
                                 editor.putBoolean("English", true);
                                 editor.apply();
@@ -321,9 +320,9 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                 popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
                     public boolean onMenuItemClick(MenuItem item) {
 
-                        if (item.getItemId() == R.id.explanation){
+                        if (item.getItemId() == R.id.explanation) {
                             ViewDialog explanationAlert = new ViewDialog();
-                            explanationAlert.showDialog(MainActivity.this,"This app will" +
+                            explanationAlert.showDialog(MainActivity.this, "This app will" +
                                     " help never forget your baby in the car.\n\n" +
                                     "It uses Google's smart activity recognition service to" +
                                     " identify what you're doing every set amount of time.\nIf" +
@@ -331,31 +330,39 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                                     " it will trigger an alarm that will definitely get your" +
                                     " attention.\n" +
                                     "\nHave a nice drive!");
-                        }
-                        else if (item.getItemId() == R.id.alarmdelay){
+                        } else if (item.getItemId() == R.id.alarmdelay) {
                             Intent intent = new Intent(MainActivity.this, AlarmDelay.class);
                             startActivity(intent);
-                        }
-                        else if (item.getItemId() == R.id.SMS_S)
-                        {
-                            boolean isBlocked =  shouldShowRequestPermissionRationale(Manifest.permission.SEND_SMS);
-
+                        } else if (item.getItemId() == R.id.SMS_S) {
                             if (contextOfApplication.checkSelfPermission(Manifest.permission.SEND_SMS)
                                     !=
                                     PackageManager.PERMISSION_GRANTED) {
-                                Log.d("SMS", "permission not granted");
+                                Log.d("SMS", "permission not granted yet");
                                 // Permission not yet granted. Use requestPermissions().
                                 // MY_PERMISSIONS_REQUEST_SEND_SMS is an
                                 // app-defined int constant. The callback method gets the
                                 // result of the request.
                                 ActivityCompat.requestPermissions(MainActivity.this,
                                         new String[]{Manifest.permission.SEND_SMS},
-                                        1);
+                                        MY_PERMISSIONS_REQUEST_SEND_SMS);
                                 Toast.makeText(contextOfApplication, "Please allow 'SEND SMS' permission in phone settings.", Toast.LENGTH_SHORT).show();
                             } else {
-                                // Permission already granted. Enable the SMS button.
-                                Intent intent = new Intent(MainActivity.this, SMS_Settings.class);
-                                startActivity(intent);
+                                if (!checkLocationPermission()) {
+                                    Log.d("SMS", "location permission not granted yet");
+                                    // Permission not yet granted. Use requestPermissions().
+                                    // MY_PERMISSIONS_REQUEST_SEND_SMS is an
+                                    // app-defined int constant. The callback method gets the
+                                    // result of the request.
+
+                                    /*ActivityCompat.requestPermissions(MainActivity.this,
+                                            new String[]{Manifest.permission.ACCESS_BACKGROUND_LOCATION,Manifest.permission.ACCESS_COARSE_LOCATION,Manifest.permission.ACCESS_FINE_LOCATION},
+                                            MY_PERMISSIONS_REQUEST_LOCATION );
+                                */
+                                } else {
+                                    // Permission already granted. Enable the SMS button.
+                                    Intent intent = new Intent(MainActivity.this, SMS_Settings.class);
+                                    startActivity(intent);
+                                }
                             }
                         }
                         return true;
@@ -368,21 +375,21 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
 
     }
 
-    public static Context getContextOfApplication(){
+    public static Context getContextOfApplication() {
         return contextOfApplication;
     }
 
     public void triggerRebirth(Context context) {
         Intent mStartActivity = new Intent(context, MainActivity.class);
         int mPendingIntentId = 123456;
-        PendingIntent mPendingIntent = PendingIntent.getActivity(context, mPendingIntentId,    mStartActivity, PendingIntent.FLAG_CANCEL_CURRENT);
-        AlarmManager mgr = (AlarmManager)context.getSystemService(Context.ALARM_SERVICE);
+        PendingIntent mPendingIntent = PendingIntent.getActivity(context, mPendingIntentId, mStartActivity, PendingIntent.FLAG_CANCEL_CURRENT);
+        AlarmManager mgr = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
         mgr.set(AlarmManager.RTC, System.currentTimeMillis() + 100, mPendingIntent);
         System.exit(0);
     }
 
-   // @RequiresApi(api = Build.VERSION_CODES.O) //for the dialog overlay type to work, it needs 26+ android instead of 23+
-    private void showDialog(){
+    // @RequiresApi(api = Build.VERSION_CODES.O) //for the dialog overlay type to work, it needs 26+ android instead of 23+
+    private void showDialog() {
         //pop it back on screen
         Intent openMainActivity = new Intent(MainActivity.this, MainActivity.class);
         openMainActivity.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
@@ -390,13 +397,11 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
 
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Baby Check");
-        if(EnglishMode)
-        {
+        if (EnglishMode) {
             builder.setMessage("Is there a baby in the car?");
             builder.setPositiveButton("Continue", listener);
             builder.setNegativeButton("Stop", listener);
-        }
-        else{
+        } else {
             builder.setMessage("האם יש תינוק ברכב?");
             builder.setPositiveButton("המשך לפעול", listener);
             builder.setNegativeButton("סיימתי, תודה", listener);
@@ -409,14 +414,14 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         dialog.show();
     }
 
-    private void overlayPermissionDialog(){
+    private void overlayPermissionDialog() {
         //pop it back on screen
 
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Permission Needed");
         builder.setMessage("Please give the app the 'overlay over other apps' permission for it to work properly.");
-        builder.setPositiveButton("OK",listenerForOverlay);
-        builder.setNegativeButton("Ask me next time",listenerForOverlay);
+        builder.setPositiveButton("OK", listenerForOverlay);
+        builder.setNegativeButton("Ask me next time", listenerForOverlay);
         builder.setCancelable(true);
         AlertDialog dialog = builder.create();
 
@@ -426,7 +431,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
 
     @Override
     public void onConnected(@Nullable Bundle bundle) {
-        if (activityRecognitionPermissionApproved()){
+        if (activityRecognitionPermissionApproved()) {
 
             //Connect Broadcast
             if (!mIsReceiverRegistered) {
@@ -438,51 +443,47 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
 
             }
             //change button image
-            if(EnglishMode)
-            {
+            if (EnglishMode) {
                 btn.setImageResource(R.drawable.stopbtn);
-            }
-            else{
+            } else {
                 btn.setImageResource(R.drawable.btn2heb);
 
             }
             Log.d("Connection", "connection good.");
-            Intent intent = new Intent (MainActivity.this, ActivityRecognizedService.class);
+            Intent intent = new Intent(MainActivity.this, ActivityRecognizedService.class);
             PendingIntent pendingIntent = PendingIntent.getService(MainActivity.this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
             //ActivityRecognition.ActivityRecognitionApi.requestActivityUpdates(mApiClient, 5000, pendingIntent);
             ActivityRecognitionClient activityRecognitionClient = ActivityRecognition.getClient(this);
             Log.d("Activity Recognition - ", "Started.");
             Task task = activityRecognitionClient.requestActivityUpdates(1000, pendingIntent);
             //Log.d("A",task.getResult().toString());
-        }
-        else{
+        } else {
             Log.d("Permission Status - ", "Not approved");
         }
     }
 
 
-         public void removeActivityUpdates() {
+    public void removeActivityUpdates() {
 
-             if (mIsReceiverRegistered) {
-                 unregisterReceiver(mReceiver);
-                 mReceiver = null;
-                 mIsReceiverRegistered = false;
-             }
-             //reset button
-             if(EnglishMode) {
-                 btn.setImageResource(R.drawable.startbtn);
-             }
-             else{
-                 btn.setImageResource(R.drawable.btnheb);
-             }
-             Intent intent = new Intent (MainActivity.this, ActivityRecognizedService.class);
-             PendingIntent pendingIntent = PendingIntent.getService(MainActivity.this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
-             ActivityRecognitionClient activityRecognitionClient = ActivityRecognition.getClient(this);
-             activityRecognitionClient.removeActivityUpdates(pendingIntent);
-             Log.d("Activity Recognition", "Stopped.");
-             CurrentState.setText("-");
+        if (mIsReceiverRegistered) {
+            unregisterReceiver(mReceiver);
+            mReceiver = null;
+            mIsReceiverRegistered = false;
+        }
+        //reset button
+        if (EnglishMode) {
+            btn.setImageResource(R.drawable.startbtn);
+        } else {
+            btn.setImageResource(R.drawable.btnheb);
+        }
+        Intent intent = new Intent(MainActivity.this, ActivityRecognizedService.class);
+        PendingIntent pendingIntent = PendingIntent.getService(MainActivity.this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        ActivityRecognitionClient activityRecognitionClient = ActivityRecognition.getClient(this);
+        activityRecognitionClient.removeActivityUpdates(pendingIntent);
+        Log.d("Activity Recognition", "Stopped.");
+        CurrentState.setText("-");
 
-         }
+    }
 
 
     //@RequiresApi(api = Build.VERSION_CODES.O)
@@ -491,14 +492,54 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         Log.d("curTime comparison", curTime + "");
         //if 10 seconds passed from last UI update or we don't have a previous update
 
-        if(dialogOnScreen && !firstDialogCheck){
+        if (dialogOnScreen && !firstDialogCheck && !PhoneNum.equals("")) {
             firstDialogCheck = true;
             curTimeForDialog = System.currentTimeMillis();
         }
+        //dialogOnScreen && System.currentTimeMillis() > curTimeForDialog + 1000 * 120
+        if (true) {
 
-        if(dialogOnScreen && firstDialogCheck){
+            final LocationListener locationListener = new LocationListener() {
+                @Override
+                public void onLocationChanged(Location location) {
+                    mylocation = location;
+                    Log.d("Location Changes", location.toString());
+                }
+            };
+
+            final Looper looper = null;
+
+            Criteria criteria = new Criteria();
+            criteria.setAccuracy(Criteria.ACCURACY_FINE);
+            criteria.setPowerRequirement(Criteria.POWER_LOW);
+            criteria.setAltitudeRequired(false);
+            criteria.setBearingRequired(false);
+            criteria.setSpeedRequired(false);
+            criteria.setCostAllowed(true);
+            criteria.setHorizontalAccuracy(Criteria.ACCURACY_HIGH);
+            criteria.setVerticalAccuracy(Criteria.ACCURACY_HIGH);
+
             LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-            //sendLocationSMS(locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, (LocationListener) this));
+            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                // TODO: Consider calling
+                //    ActivityCompat#requestPermissions
+                // here to request the missing permissions, and then overriding
+                //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                //                                          int[] grantResults)
+                // to handle the case where the user grants the permission. See the documentation
+                // for ActivityCompat#requestPermissions for more details.
+                return;
+            }
+
+            locationManager.requestSingleUpdate(criteria, locationListener, looper);
+
+            new Timer().schedule(new TimerTask() {
+                @Override
+                public void run() {
+                    sendLocationSMS(mylocation);
+                }
+            }, 5000);
+            //sendLocationSMS(locationManager.requestLocationUpdates(LocationManager.))
         }
 
         if(System.currentTimeMillis() > (curTime + 10000) || firstUpdate) {
@@ -568,12 +609,48 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         }
     }
 
+    public boolean checkLocationPermission() {
+        if (ContextCompat.checkSelfPermission(this,
+                Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) {
+
+            // Should we show an explanation?
+            if (ActivityCompat.shouldShowRequestPermissionRationale(this,
+                    Manifest.permission.ACCESS_FINE_LOCATION)) {
+
+                // Show an explanation to the user *asynchronously* -- don't block
+                // this thread waiting for the user's response! After the user
+                // sees the explanation, try again to request the permission.
+                new AlertDialog.Builder(this)
+                        .setTitle("This function requires your location")
+                        .setMessage("Please allow the location permission to continue")
+                        .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                //Prompt the user once explanation has been shown
+                                ActivityCompat.requestPermissions(MainActivity.this,
+                                        new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                                        MY_PERMISSIONS_REQUEST_LOCATION);
+                            }
+                        })
+                        .create()
+                        .show();
+
+
+            } else {
+                // No explanation needed, we can request the permission.
+                ActivityCompat.requestPermissions(this,
+                        new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                        MY_PERMISSIONS_REQUEST_LOCATION);
+            }
+            return false;
+        } else {
+            return true;
+        }
+    }
+
     public void sendLocationSMS(Location currentLocation) {
 
-
-        //check time passed after alarm passed
-        {
-        }
         if(!PhoneNum.equals("")) {
             String message = getResources().getString(R.string.location_message);
             SmsManager sms = SmsManager.getDefault();
@@ -586,6 +663,8 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
             smsBody.append(currentLocation.getLongitude());
             ArrayList<String> parts = sms.divideMessage(smsBody.toString());
             sms.sendMultipartTextMessage(PhoneNum, null, parts, null, null);
+            //sms.sendMultipartTextMessage("15555215556", null, parts, null, null);
+            Log.d(TAG, parts.toString());
             //sms.sendTextMessage("6505551212", null, smsBody.toString(), null, null);
         }
     }

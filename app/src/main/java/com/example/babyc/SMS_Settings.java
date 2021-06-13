@@ -32,15 +32,15 @@ public class SMS_Settings extends AppCompatActivity {
         applyBtn = (Button) findViewById(R.id.applyBtnS);
         cancelBtn = (Button) findViewById(R.id.cancelBtnS);
         ET = (EditText) findViewById(R.id.userInputS);
-        curNumber = (TextView) findViewById(R.id.SMS_Explanation);
+        curNumber = (TextView) findViewById(R.id.curNumber);
 
-        curNumber.setText("Current Number: " + prefs.getLong("SMS_Number", 0));
+        curNumber.setText("Current Number: " + prefs.getString("SMS_Number", "none"));
 
         applyBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 String output = ET.getText().toString();
-                if(isNumeric(output) && (Long.parseLong(output) >= 999999999L && Long.parseLong(output) <=999999999999L) ){
+                if(isNumeric(output) && (Long.parseLong(output) >= 99999999L && Long.parseLong(output) <=999999999999L) ){
                     editor.putString("SMS_Number", output);
                     editor.apply();
                     Toast.makeText(getApplicationContext(),"Changed successfully :)", Toast.LENGTH_SHORT).show();
