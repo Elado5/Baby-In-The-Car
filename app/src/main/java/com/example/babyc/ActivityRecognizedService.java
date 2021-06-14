@@ -107,17 +107,6 @@ public class ActivityRecognizedService extends IntentService {
                         sendBroadcast(intent);
                     }
                 }break;
-                case DetectedActivity.UNKNOWN:
-                {
-                    Log.d(TAG, "handleDetectedActivity: UNKNOWN - " + activity.getConfidence());
-                    Intent intent = new Intent("updateIntent");
-                    if(activity.getConfidence() == 40) {
-                        intent.putExtra("activityUpdate", "Unrecognized Activity");
-                        sendBroadcast(intent);
-                    }
-
-
-                }break;
 
             }
         }
@@ -181,18 +170,6 @@ public class ActivityRecognizedService extends IntentService {
                             intent.putExtra("activityUpdate","דומם");
                             sendBroadcast(intent);
                         }
-                    }break;
-
-                    case DetectedActivity.UNKNOWN:
-                    {
-                        Log.d(TAG, "handleDetectedActivity: UNKNOWN - " + activity.getConfidence());
-                        Intent intent = new Intent("updateIntent");
-                        if(activity.getConfidence() == 40) {
-                            intent.putExtra("activityUpdate", "פעילות לא מזוהה");
-                            sendBroadcast(intent);
-                        }
-
-
                     }break;
 
                 }

@@ -76,6 +76,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     Boolean firstUpdate = true; //first time we update the UI?
     Boolean dialogOnScreen = false; //Is there an alert dialog on the screen currently?
     Boolean firstDialogCheck = false; //bool for first time the dialog pops up.
+    Boolean firstLocationCheck = false; //
     Boolean EnglishMode = false; //is English mode active?
 
     private static final int MY_PERMISSIONS_REQUEST_SEND_SMS = 1;
@@ -83,6 +84,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     public static final int MY_PERMISSIONS_REQUEST_LOCATION = 99;
 
     Location mylocation;
+
     String PhoneNum = "";
 
     MediaPlayer mp;
@@ -353,7 +355,6 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                                     // MY_PERMISSIONS_REQUEST_SEND_SMS is an
                                     // app-defined int constant. The callback method gets the
                                     // result of the request.
-
                                     /*ActivityCompat.requestPermissions(MainActivity.this,
                                             new String[]{Manifest.permission.ACCESS_BACKGROUND_LOCATION,Manifest.permission.ACCESS_COARSE_LOCATION,Manifest.permission.ACCESS_FINE_LOCATION},
                                             MY_PERMISSIONS_REQUEST_LOCATION );
@@ -462,7 +463,6 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         }
     }
 
-
     public void removeActivityUpdates() {
 
         if (mIsReceiverRegistered) {
@@ -490,58 +490,28 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     private void updateUI(Intent intent) {
         Log.d("updateUI", "got broadcast");
         Log.d("curTime comparison", curTime + "");
-        //if 10 seconds passed from last UI update or we don't have a previous update
 
         if (dialogOnScreen && !firstDialogCheck && !PhoneNum.equals("")) {
             firstDialogCheck = true;
             curTimeForDialog = System.currentTimeMillis();
         }
+
+        //If the user doesn't respond to the dialog on the screen for x seconds and there's a user location saved.
         //dialogOnScreen && System.currentTimeMillis() > curTimeForDialog + 1000 * 120
-        if (true) {
+        if (dialogOnScreen && !PhoneNum.equals("") && firstDialogCheck) {
 
-            final LocationListener locationListener = new LocationListener() {
-                @Override
-                public void onLocationChanged(Location location) {
-                    mylocation = location;
-                    Log.d("Location Changes", location.toString());
-                }
-            };
-
-            final Looper looper = null;
-
-            Criteria criteria = new Criteria();
-            criteria.setAccuracy(Criteria.ACCURACY_FINE);
-            criteria.setPowerRequirement(Criteria.POWER_LOW);
-            criteria.setAltitudeRequired(false);
-            criteria.setBearingRequired(false);
-            criteria.setSpeedRequired(false);
-            criteria.setCostAllowed(true);
-            criteria.setHorizontalAccuracy(Criteria.ACCURACY_HIGH);
-            criteria.setVerticalAccuracy(Criteria.ACCURACY_HIGH);
-
-            LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                // TODO: Consider calling
-                //    ActivityCompat#requestPermissions
-                // here to request the missing permissions, and then overriding
-                //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-                //                                          int[] grantResults)
-                // to handle the case where the user grants the permission. See the documentation
-                // for ActivityCompat#requestPermissions for more details.
-                return;
-            }
-
-            locationManager.requestSingleUpdate(criteria, locationListener, looper);
-
+            if(System.currentTimeMillis() > curTimeForDialog + 1000 * 20){
             new Timer().schedule(new TimerTask() {
                 @Override
                 public void run() {
                     sendLocationSMS(mylocation);
                 }
-            }, 5000);
+            }, 1000);
             //sendLocationSMS(locationManager.requestLocationUpdates(LocationManager.))
         }
+        }
 
+        //if 10 seconds passed from last UI update or we don't have a previous update
         if(System.currentTimeMillis() > (curTime + 10000) || firstUpdate) {
 
             if(firstUpdate){
@@ -562,14 +532,12 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                 alarmSet = true;
             }
 
-
             //car version alarm set
             /*if(CurrentState.getText().toString().equals("In Vehicle")||CurrentState.getText().toString().equals("בנסיעה") && !alarmSet && !dialogOnScreen){
                 curTime2 = System.currentTimeMillis();
                 Log.d("Alarm", "Set");
                 alarmSet = true;
             }*/
-
 
             /*
             //car version - real version - using alarmDelaySeconds - activate only if state changed from ''in vehicle''
@@ -586,26 +554,48 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
             }
            */
 
-            //activate alert dialog if x seconds passed
+            //activate alert dialog and save location if x seconds passed
             if(alarmSet && System.currentTimeMillis() > curTime2 + 1000 * 40){
-                PowerManager pm = (PowerManager) getApplicationContext().getSystemService(Context.POWER_SERVICE);
-                PowerManager.WakeLock wakeLock = pm.newWakeLock(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
-                        ,  "BabyC: Wake Up Screen");
 
-                wakeLock.acquire(10*60*100L /*30 seconds*/);
+                //lambda version of 'on location changed'
+                final LocationListener locationListener = location -> {
+                    mylocation = location;
+                    Log.d("Location Changes", location.toString());
+                };
+
+                final Looper looper = null;
+                Criteria criteria = new Criteria();
+                criteria.setAccuracy(Criteria.ACCURACY_FINE);
+                criteria.setPowerRequirement(Criteria.POWER_LOW);
+                criteria.setAltitudeRequired(false);
+                criteria.setBearingRequired(false);
+                criteria.setSpeedRequired(false);
+                criteria.setCostAllowed(true);
+                criteria.setHorizontalAccuracy(Criteria.ACCURACY_HIGH);
+                criteria.setVerticalAccuracy(Criteria.ACCURACY_HIGH);
+
+                LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+
+
+                //another permission check to make sure nothing will make the app collapse
+                if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                        != PackageManager.PERMISSION_GRANTED
+                        && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)
+                        != PackageManager.PERMISSION_GRANTED)
+                {
+                    Toast.makeText(contextOfApplication, "Location permission missing", Toast.LENGTH_SHORT).show();
+                }
+                //if it's good - get a single location update
+                else {
+                    locationManager.requestSingleUpdate(criteria, locationListener, looper);
+                    firstLocationCheck = true;
+                }
+
                 mp.start();
-                dialogOnScreen = true; //the dialog will start in the next line so we don't want multiple dialogs to stack.
-                /*if (super.isDestroyed()){
-                }*/
+                dialogOnScreen = true; //boolean to make sure we don't have stacking dialogs
                 showDialog();
                 alarmSet = false;
             }
-
-
-
-
-
-
         }
     }
 
@@ -635,6 +625,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                         })
                         .create()
                         .show();
+                Toast.makeText(contextOfApplication, "You can restart the app for the changes to take effect.", Toast.LENGTH_LONG).show();
 
 
             } else {
@@ -650,7 +641,6 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     }
 
     public void sendLocationSMS(Location currentLocation) {
-
         if(!PhoneNum.equals("")) {
             String message = getResources().getString(R.string.location_message);
             SmsManager sms = SmsManager.getDefault();
@@ -665,7 +655,6 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
             sms.sendMultipartTextMessage(PhoneNum, null, parts, null, null);
             //sms.sendMultipartTextMessage("15555215556", null, parts, null, null);
             Log.d(TAG, parts.toString());
-            //sms.sendTextMessage("6505551212", null, smsBody.toString(), null, null);
         }
     }
 
