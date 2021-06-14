@@ -153,14 +153,8 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
         SharedPreferences.Editor editor = prefs.edit();
 
-        if (prefs.contains("SMS_Number")) {
+        //grab phone number from SP if it exists
             PhoneNum = prefs.getString("SMS_Number", "");
-        }
-
-        if (!(prefs.contains("alarmDelay"))) {
-            editor.putInt("alarmDelay", 150);
-            editor.apply();
-        }
 
         //150 is value if it doesn't exist
         alarmDelaySeconds = prefs.getInt("alarmDelay", 150);
@@ -171,8 +165,8 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         //if we don't have language settings saved - default is English
         if (!(prefs.contains("English")) && !(prefs.contains("Hebrew"))) {
             Log.d("Shared pref", "defining");
-            editor.putBoolean("English", false);
-            editor.putBoolean("Hebrew", true);
+            editor.putBoolean("English", true);
+            editor.putBoolean("Hebrew", false);
             editor.apply();
             EnglishMode = true;
         }
@@ -273,6 +267,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
 
             btn.setOnClickListener(this);
 
+            //'Language' menu button handling
             langBtn.setOnClickListener(new View.OnClickListener() {
 
                 @Override
@@ -309,6 +304,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
             });
         }
 
+        //'Help' menu button handling
         helpBtn.setOnClickListener(new View.OnClickListener() {
 
             @Override
@@ -351,20 +347,22 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                             } else {
                                 if (!checkLocationPermission()) {
                                     Log.d("SMS", "location permission not granted yet");
-                                    // Permission not yet granted. Use requestPermissions().
-                                    // MY_PERMISSIONS_REQUEST_SEND_SMS is an
-                                    // app-defined int constant. The callback method gets the
-                                    // result of the request.
-                                    /*ActivityCompat.requestPermissions(MainActivity.this,
-                                            new String[]{Manifest.permission.ACCESS_BACKGROUND_LOCATION,Manifest.permission.ACCESS_COARSE_LOCATION,Manifest.permission.ACCESS_FINE_LOCATION},
-                                            MY_PERMISSIONS_REQUEST_LOCATION );
-                                */
                                 } else {
                                     // Permission already granted. Enable the SMS button.
                                     Intent intent = new Intent(MainActivity.this, SMS_Settings.class);
                                     startActivity(intent);
                                 }
                             }
+                        }
+                        else if (item.getItemId() == R.id.RestartApp) {
+                            Toast.makeText(contextOfApplication, "Restarting App in 2 seconds...", Toast.LENGTH_SHORT).show();
+
+                            new Timer().schedule(new TimerTask() {
+                                @Override
+                                public void run() {
+                                    triggerRebirth(contextOfApplication);
+                                }
+                            }, 2000);
                         }
                         return true;
                     }
@@ -500,13 +498,15 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         //dialogOnScreen && System.currentTimeMillis() > curTimeForDialog + 1000 * 120
         if (dialogOnScreen && !PhoneNum.equals("") && firstDialogCheck) {
 
-            if(System.currentTimeMillis() > curTimeForDialog + 1000 * 20){
-            new Timer().schedule(new TimerTask() {
+            if(System.currentTimeMillis() > curTimeForDialog + 1000 * 15){
+                Toast.makeText(contextOfApplication, "Sending SMS to contact", Toast.LENGTH_SHORT).show();
+
+                new Timer().schedule(new TimerTask() {
                 @Override
                 public void run() {
                     sendLocationSMS(mylocation);
                 }
-            }, 1000);
+            }, 4500);
             //sendLocationSMS(locationManager.requestLocationUpdates(LocationManager.))
         }
         }
@@ -625,7 +625,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                         })
                         .create()
                         .show();
-                Toast.makeText(contextOfApplication, "You can restart the app for the changes to take effect.", Toast.LENGTH_LONG).show();
+                Toast.makeText(contextOfApplication, "Restart the app for changes to take effect.", Toast.LENGTH_LONG).show();
 
 
             } else {

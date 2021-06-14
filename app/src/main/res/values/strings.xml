@@ -29,4 +29,5 @@
     <string name="SMS_Settings">SMS Settings</string>
     <string name="SMS_hint">Send Location SMS to this number</string>
     <string name="SMS_Target_Explanation">We will send an automatic message with your location to that number if you don\'t respond to the alarm for two minutes</string>
+    <string name="restart_app">Restart App</string>
 </resources>

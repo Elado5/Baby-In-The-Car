@@ -9,4 +9,7 @@
         <item
             android:id="@+id/SMS_S"
             android:title="@string/SMS_Settings"/>
+        <item
+                android:id="@+id/RestartApp"
+                android:title="@string/restart_app" />
 </menu>
