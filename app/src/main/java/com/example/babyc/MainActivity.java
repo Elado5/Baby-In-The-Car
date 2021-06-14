@@ -26,6 +26,7 @@ import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.media.MediaPlayer;
+import android.os.Vibrator;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -88,6 +89,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     String PhoneNum = "";
 
     MediaPlayer mp;
+    Vibrator v;
 
     AlarmManager alarmManager;
 
@@ -107,6 +109,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                 case Dialog.BUTTON_POSITIVE:
                     dialogOnScreen = false;
                     mp.pause();
+                    v.cancel();
                     break;
                 case Dialog.BUTTON_NEGATIVE:
                     dialogOnScreen = false;
@@ -320,7 +323,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
 
                         if (item.getItemId() == R.id.explanation) {
                             ViewDialog explanationAlert = new ViewDialog();
-                            explanationAlert.showDialog(MainActivity.this, "This app will" +
+                            explanationAlert.showExDialog(MainActivity.this, "This app will" +
                                     " help never forget your baby in the car.\n\n" +
                                     "It uses Google's smart activity recognition service to" +
                                     " identify what you're doing every set amount of time.\nIf" +
@@ -363,6 +366,11 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                                     triggerRebirth(contextOfApplication);
                                 }
                             }, 2000);
+                        }
+                        else if (item.getItemId() == R.id.Theme){
+                            setContentView(R.layout.activity_main);
+                            //getWindow().getDecorView().setBackgroundResource(R.drawable.bgnewblue);
+
                         }
                         return true;
                     }
@@ -592,6 +600,9 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                 }
 
                 mp.start();
+                v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
+                long[] pattern = {0, 500};
+                v.vibrate(pattern, 5);
                 dialogOnScreen = true; //boolean to make sure we don't have stacking dialogs
                 showDialog();
                 alarmSet = false;

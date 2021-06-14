@@ -13,7 +13,7 @@ import android.widget.TextView;
 
 public class ViewDialog {
 
-    public void showDialog(Activity activity, String msg){
+    public void showExDialog(Activity activity, String msg){
         final Dialog dialog = new Dialog(activity);
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
         dialog.setCancelable(true);
