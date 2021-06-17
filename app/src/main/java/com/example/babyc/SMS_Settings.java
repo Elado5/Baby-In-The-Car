@@ -12,8 +12,7 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
-public class AlarmDelay extends AppCompatActivity {
-
+public class SMS_Settings extends AppCompatActivity {
     //Shared prefs -> taking context from main activty static context so we can use it
     Context applicationContext =  MainActivity.getContextOfApplication();
     SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(applicationContext);
@@ -21,34 +20,34 @@ public class AlarmDelay extends AppCompatActivity {
 
     Button applyBtn;
     Button cancelBtn;
-    TextView curDelay;
+    TextView curNumber;
     EditText ET;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_alarm_delay);
+        setContentView(R.layout.activity_sms_settings);
 
         applyBtn = (Button) findViewById(R.id.applyBtnS);
         cancelBtn = (Button) findViewById(R.id.cancelBtnS);
         ET = (EditText) findViewById(R.id.userInputS);
-        curDelay = (TextView) findViewById(R.id.curNumber);
+        curNumber = (TextView) findViewById(R.id.curNumber);
 
-        curDelay.setText("Current alarm delay: " + prefs.getInt("alarmDelay", 0));
+        curNumber.setText("Current Number: " + prefs.getString("SMS_Number", "none"));
 
         applyBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 String output = ET.getText().toString();
-                if(isNumeric(output) && (Integer.parseInt(output) >= 90 && Integer.parseInt(output) <=300) ){
-                    editor.putInt("alarmDelay", Integer.parseInt(output));
+                if(isNumeric(output) && (Long.parseLong(output) >= 99999999L && Long.parseLong(output) <=999999999999L) ){
+                    editor.putString("SMS_Number", output);
                     editor.apply();
-                    Toast.makeText(getApplicationContext(),"Changed successfully :)", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getApplicationContext(),"Changed successfully, restart app to update :)", Toast.LENGTH_LONG).show();
                     finish();
                 }
                 else{
-                    Toast.makeText(getApplicationContext(),"Chose between 90-300 seconds, and only numbers.", Toast.LENGTH_LONG).show();
+                    Toast.makeText(getApplicationContext(),"Please enter a valid number", Toast.LENGTH_LONG).show();
                 }
             }
         });
@@ -68,10 +67,11 @@ public class AlarmDelay extends AppCompatActivity {
             return false;
         }
         try {
-            int d = Integer.parseInt(strNum);
+            Long d = Long.parseLong(strNum);
         } catch (NumberFormatException nfe) {
             return false;
         }
         return true;
     }
+
 }
