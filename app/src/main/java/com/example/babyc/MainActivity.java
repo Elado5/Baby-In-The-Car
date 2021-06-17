@@ -528,37 +528,72 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
             curTime = System.currentTimeMillis();
 
             //check if the state is driving (in this case - still, because it's for debug) and set alarm for 2 minutes after it
-            if( (CurrentState.getText().toString().equals("Still") || (CurrentState.getText().toString().equals("דומם")))  && !alarmSet && !dialogOnScreen){
+            /*if( (CurrentState.getText().toString().equals("Still") || (CurrentState.getText().toString().equals("דומם")))  && !alarmSet && !dialogOnScreen){
                 curTime2 = System.currentTimeMillis();
                 Log.d("Alarm", "Set");
                 Toast.makeText(contextOfApplication, "Alarm is Set", Toast.LENGTH_SHORT).show();
                 alarmSet = true;
             }
-
+*/
             //car version alarm set
-            /*if(CurrentState.getText().toString().equals("In Vehicle")||CurrentState.getText().toString().equals("בנסיעה") && !alarmSet && !dialogOnScreen){
+            if(CurrentState.getText().toString().equals("In Vehicle")||CurrentState.getText().toString().equals("בנסיעה") && !alarmSet && !dialogOnScreen){
                 curTime2 = System.currentTimeMillis();
                 Log.d("Alarm", "Set");
                 alarmSet = true;
-            }*/
+            }
 
-            /*
+
             //car version - real version - using alarmDelaySeconds - activate only if state changed from ''in vehicle''
             if(alarmSet && System.currentTimeMillis() > curTime2 + 1000 * alarmDelaySeconds && !(CurrentState.getText().toString().equals("Current Activity:\n\nIn Vehicle")) ){
                 PowerManager pm = (PowerManager) getApplicationContext().getSystemService(Context.POWER_SERVICE);
                 PowerManager.WakeLock wakeLock = pm.newWakeLock(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
                         ,  "BabyC: Wake Up Screen");
 
-                wakeLock.acquire(10*60*100L ); //30 seconds screen wake force
-                mp.start(); //start playing
-                dialogOnScreen = true; //the dialog will start in the next line so we don't want multiple dialogs to stack.
+                final LocationListener locationListener = location -> {
+                    mylocation = location;
+                    Log.d("Location Changes", location.toString());
+                };
+
+                final Looper looper = null;
+                Criteria criteria = new Criteria();
+                criteria.setAccuracy(Criteria.ACCURACY_FINE);
+                criteria.setPowerRequirement(Criteria.POWER_LOW);
+                criteria.setAltitudeRequired(false);
+                criteria.setBearingRequired(false);
+                criteria.setSpeedRequired(false);
+                criteria.setCostAllowed(true);
+                criteria.setHorizontalAccuracy(Criteria.ACCURACY_HIGH);
+                criteria.setVerticalAccuracy(Criteria.ACCURACY_HIGH);
+
+                LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+
+
+                //another permission check to make sure nothing will make the app collapse
+                if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                        != PackageManager.PERMISSION_GRANTED
+                        && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)
+                        != PackageManager.PERMISSION_GRANTED)
+                {
+                    Toast.makeText(contextOfApplication, "Location permission missing", Toast.LENGTH_SHORT).show();
+                }
+                //if it's good - get a single location update
+                else {
+                    locationManager.requestSingleUpdate(criteria, locationListener, looper);
+                    firstLocationCheck = true;
+                }
+
+                mp.start();
+                v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
+                long[] pattern = {0, 500};
+                v.vibrate(pattern, 5);
+                dialogOnScreen = true; //boolean to make sure we don't have stacking dialogs
                 showDialog();
                 alarmSet = false;
             }
-           */
+
 
             //activate alert dialog and save location if x seconds passed
-            if(alarmSet && System.currentTimeMillis() > curTime2 + 1000 * 40){
+            /*if(alarmSet && System.currentTimeMillis() > curTime2 + 1000 * 40){
 
                 //lambda version of 'on location changed'
                 final LocationListener locationListener = location -> {
@@ -602,6 +637,8 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                 showDialog();
                 alarmSet = false;
             }
+            */
+
         }
     }
 
