@@ -367,11 +367,6 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                                 }
                             }, 2000);
                         }
-                        else if (item.getItemId() == R.id.Theme){
-                            setContentView(R.layout.activity_main);
-                            //getWindow().getDecorView().setBackgroundResource(R.drawable.bgnewblue);
-
-                        }
                         return true;
                     }
                 });

@@ -43,7 +43,7 @@ public class SMS_Settings extends AppCompatActivity {
                 if(isNumeric(output) && (Long.parseLong(output) >= 99999999L && Long.parseLong(output) <=999999999999L) ){
                     editor.putString("SMS_Number", output);
                     editor.apply();
-                    Toast.makeText(getApplicationContext(),"Changed successfully :)", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getApplicationContext(),"Changed successfully, restart app to update :)", Toast.LENGTH_LONG).show();
                     finish();
                 }
                 else{
