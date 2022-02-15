@@ -114,6 +114,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                 case Dialog.BUTTON_NEGATIVE:
                     dialogOnScreen = false;
                     mp.pause();
+                    v.cancel();
                     mApiClient.disconnect();
                     removeActivityUpdates();
                     break;
@@ -498,10 +499,9 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         }
 
         //If the user doesn't respond to the dialog on the screen for x seconds and there's a user location saved.
-        //dialogOnScreen && System.currentTimeMillis() > curTimeForDialog + 1000 * 120
         if (dialogOnScreen && !PhoneNum.equals("") && firstDialogCheck) {
 
-            if(System.currentTimeMillis() > curTimeForDialog + 1000 * 15){
+            if(System.currentTimeMillis() > curTimeForDialog + 1000 * 120){
                 Toast.makeText(contextOfApplication, "Sending SMS to contact", Toast.LENGTH_SHORT).show();
 
                 new Timer().schedule(new TimerTask() {
@@ -584,7 +584,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
 
                 mp.start();
                 v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
-                long[] pattern = {0, 500};
+                long[] pattern = {0, 500, 1000};
                 v.vibrate(pattern, 0);
 
                 dialogOnScreen = true; //boolean to make sure we don't have stacking dialogs
