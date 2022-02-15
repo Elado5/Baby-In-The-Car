@@ -536,15 +536,15 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
             }
 */
             //car version alarm set
-            if(CurrentState.getText().toString().equals("In Vehicle")||CurrentState.getText().toString().equals("בנסיעה") && !alarmSet && !dialogOnScreen){
+            if((CurrentState.getText().toString().equals("In Vehicle")||CurrentState.getText().toString().equals("בנסיעה")) && !alarmSet && !dialogOnScreen){
                 curTime2 = System.currentTimeMillis();
                 Log.d("Alarm", "Set");
                 alarmSet = true;
             }
 
 
-            //car version - real version - using alarmDelaySeconds - activate only if state changed from ''in vehicle''
-            if(alarmSet && System.currentTimeMillis() > curTime2 + 1000 * alarmDelaySeconds && !(CurrentState.getText().toString().equals("Current Activity:\n\nIn Vehicle")) ){
+            //car version - real version - using alarmDelaySeconds - activate only if state changed from ''in vehicle'' and 'x' time passed
+            if(alarmSet && System.currentTimeMillis() > curTime2 + 1000 * alarmDelaySeconds && (!(CurrentState.getText().toString().equals("Current Activity:\n\nIn Vehicle") && !(CurrentState.getText().toString().equals("סטטוס נוכחי:\n\nבנסיעה")))) ){
                 PowerManager pm = (PowerManager) getApplicationContext().getSystemService(Context.POWER_SERVICE);
                 PowerManager.WakeLock wakeLock = pm.newWakeLock(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
                         ,  "BabyC: Wake Up Screen");
@@ -583,9 +583,10 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                 }
 
                 mp.start();
-                v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
+                /*v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
                 long[] pattern = {0, 500};
                 v.vibrate(pattern, 5);
+                */
                 dialogOnScreen = true; //boolean to make sure we don't have stacking dialogs
                 showDialog();
                 alarmSet = false;
