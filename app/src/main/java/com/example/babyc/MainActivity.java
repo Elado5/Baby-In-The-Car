@@ -528,19 +528,19 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
             curTime = System.currentTimeMillis();
 
             //debug version of alarm set: check if the state is driving (in this case - still, because it's for debug) and set alarm for 2 minutes after it
-            if( (CurrentState.getText().toString().equals("Still") || (CurrentState.getText().toString().equals("דומם")))  && !alarmSet && !dialogOnScreen){
+            /*if( (CurrentState.getText().toString().equals("Still") || (CurrentState.getText().toString().equals("דומם")))  && !alarmSet && !dialogOnScreen){
                 curTime2 = System.currentTimeMillis();
                 Log.d("Alarm", "Set");
                 Toast.makeText(contextOfApplication, "Alarm is Set", Toast.LENGTH_SHORT).show();
                 alarmSet = true;
-            }
+            }*/
 
             //car version alarm set
-            /*if((CurrentState.getText().toString().equals("In Vehicle")||CurrentState.getText().toString().equals("בנסיעה")) && !alarmSet && !dialogOnScreen){
+            if((CurrentState.getText().toString().equals("In Vehicle")||CurrentState.getText().toString().equals("בנסיעה")) && !alarmSet && !dialogOnScreen){
                 curTime2 = System.currentTimeMillis();
                 Log.d("Alarm", "Set");
                 alarmSet = true;
-            }*/
+            }
 
 
             //car version - real version - using alarmDelaySeconds - activate only if state changed from ''in vehicle'' and 'x' time passed
@@ -584,7 +584,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
 
                 mp.start();
                 v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
-                long[] pattern = {0, 500, 1000};
+                long[] pattern = { 0, 100, 500, 100, 500, 100, 500, 100, 500, 100, 500, 100, 500};
                 v.vibrate(pattern, 0);
 
                 dialogOnScreen = true; //boolean to make sure we don't have stacking dialogs
